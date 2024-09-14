@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "676023959863",
+    "project_id": "bayani-79675",
+    "storage_bucket": "bayani-79675.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:676023959863:android:79e19b2ae13ddf59bb5ab2",
+        "android_client_info": {
+          "package_name": "com.example.administrator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM25DVgNTIZqjIkq9WjJfocstGPs72vBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:676023959863:android:af0c7dd9fcb205d0bb5ab2",
+        "android_client_info": {
+          "package_name": "com.example.citizen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM25DVgNTIZqjIkq9WjJfocstGPs72vBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
