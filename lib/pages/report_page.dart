@@ -147,9 +147,9 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
         // Upload the video to Firebase Storage
         mediaUrl = await _dbService.uploadMedia(mediaFile, 'videos');
       } else if (_imageSelected) {
-       // Upload image as is
-      await Gal.putImage(_selectedMediaFile!.path);  // Save image to gallery
-      mediaUrl = await _dbService.uploadMedia(mediaFile, 'reports'); 
+        // Upload image as is
+        await Gal.putImage(_selectedMediaFile!.path); // Save image to gallery
+        mediaUrl = await _dbService.uploadMedia(mediaFile, 'reports');
       }
       // Call the addReport method from DatabaseService with the media URL
       await _dbService.addReport(
@@ -223,6 +223,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text('Submit Report'),
         shadowColor: Colors.black,
@@ -440,42 +441,34 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                         flex: 3,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5.0),
-                          child: Autocomplete<String>(
-                            optionsBuilder:
-                                (TextEditingValue textEditingValue) {
-                              if (textEditingValue.text.isEmpty) {
-                                return incidentTypes;
-                              }
-                              return incidentTypes.where((String option) {
-                                return option.toLowerCase().contains(
-                                    textEditingValue.text.toLowerCase());
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Type of Incident',
+                              hintText: "Type of Incident",
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            value: _incidentTypeController.text.isNotEmpty
+                                ? _incidentTypeController.text
+                                : null,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _incidentTypeController.text = newValue!;
                               });
                             },
-                            onSelected: (String selection) {
-                              _incidentTypeController.text = selection;
-                            },
-                            fieldViewBuilder: (BuildContext context,
-                                TextEditingController textEditingController,
-                                FocusNode focusNode,
-                                VoidCallback onFieldSubmitted) {
-                              _incidentTypeController.text =
-                                  textEditingController.text;
-                              return TextField(
-                                controller: textEditingController,
-                                focusNode: focusNode,
-                                decoration: InputDecoration(
-                                  labelText: 'Type of Incident',
-                                  hintText: "Type of Incident",
-                                  floatingLabelBehavior: FloatingLabelBehavior
-                                      .always, // Move label to top
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                ),
+                            items: incidentTypes
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
                               );
-                            },
+                            }).toList(),
+                            isExpanded: true, // Ensures dropdown is wide enough
                           ),
                         ),
                       ),
@@ -526,6 +519,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                                 child: Text(value),
                               );
                             }).toList(),
+                            isExpanded: true,
                           ),
                         ),
                       ),
