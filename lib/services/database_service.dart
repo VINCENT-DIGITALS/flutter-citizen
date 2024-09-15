@@ -128,6 +128,7 @@ class DatabaseService {
     String? mediaUrl,
   }) async {
     try {
+      
       final reportData = {
         'reporterId': currentUser?.uid ?? 'unknown',
         'address': address,

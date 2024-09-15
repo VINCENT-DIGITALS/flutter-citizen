@@ -181,6 +181,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
           // _descriptionController.dispose();
           // _landmarkController.dispose();
         });
+        
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

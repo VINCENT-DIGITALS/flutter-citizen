@@ -8,6 +8,8 @@ import 'package:citizen/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../pages/summary_report_page.dart';
+
 class BottomNavBar extends StatefulWidget {
   final String currentPage;
 
@@ -25,14 +27,14 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
     switch (page) {
       case 'home':
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => HomePage(currentPage: 'home')),
         );
         break;
       case 'map':
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MapPage(currentPage: 'map')),
         );
@@ -54,7 +56,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ReportPage(currentPage: 'report')),
+              builder: (context) => ReportsSummaryPage(currentPage: 'SummaryReport')),
         );
         break;
     }
@@ -98,7 +100,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     switch (page) {
       case 'home':
         return 0;
-      case 'report':
+      case 'SummaryReport':
         return 1;
       case 'update':
         return 2;

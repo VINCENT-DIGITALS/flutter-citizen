@@ -7,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 class MapPage extends StatefulWidget {
   final String currentPage;
 
-  const MapPage({Key? key, this.currentPage = 'weather'}) : super(key: key);
+  const MapPage({Key? key, this.currentPage = 'map'}) : super(key: key);
 
   @override
   State<MapPage> createState() => _MapPageState();

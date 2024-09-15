@@ -1,16 +1,15 @@
-import 'package:citizen/components/setting.dart';
-import 'package:citizen/main.dart';
-import 'package:citizen/pages/map_page.dart';
-import 'package:citizen/services/auth_page.dart';
 import 'package:citizen/pages/home_page.dart';
-import 'package:citizen/pages/login_page.dart';
+import 'package:citizen/pages/hotlineDirectories_page.dart';
 import 'package:citizen/pages/profile_page.dart';
-import 'package:citizen/pages/weather_page.dart';
-import 'package:citizen/services/database_service.dart';
-
+import 'package:citizen/sidebar_Pages/about_app_page.dart';
+import 'package:citizen/sidebar_Pages/about_cdrrmo_page.dart';
+import 'package:citizen/sidebar_Pages/cpr_page.dart';
+import 'package:citizen/sidebar_Pages/fire_safety_tips_page.dart';
+import 'package:citizen/sidebar_Pages/first_aid_tips_page.dart';
+import 'package:citizen/sidebar_Pages/mental_health_page.dart';
+import 'package:citizen/sidebar_Pages/personal_safety.dart';
+import 'package:citizen/sidebar_Pages/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -24,9 +23,7 @@ class CustomDrawer extends StatefulWidget {
 
 class _CustomDrawerState extends State<CustomDrawer> {
   SharedPreferences? _prefs;
-  final DatabaseService _dbService = DatabaseService();
-  bool _isSettingExpanded = false;
-  Map<String, String> _userData= {};
+  Map<String, String> _userData = {};
 
   @override
   void initState() {
@@ -34,160 +31,235 @@ class _CustomDrawerState extends State<CustomDrawer> {
     _initializePreferences();
   }
 
-   void _initializePreferences() async {
+  void _initializePreferences() async {
     _prefs = await SharedPreferences.getInstance();
     _fetchAndDisplayUserData();
   }
-    Future<void> _fetchAndDisplayUserData() async {
-    try {
-      setState(() {
-        _userData = {
-          'uid': _prefs?.getString('uid') ?? '',
-          'email': _prefs?.getString('email') ?? '',
-          'displayName': _prefs?.getString('displayName') ?? '',
-          'photoURL': _prefs?.getString('photoURL') ?? '',
-          'phoneNum': _prefs?.getString('phoneNum') ?? '',
-          'createdAt': _prefs?.getString('createdAt') ?? '',
-          'address': _prefs?.getString('address') ?? '',
-          'status': _prefs?.getString('status') ?? '',
-        };
-      });
-    } catch (e) {
-      print('Error fetching user data: $e');
-    }
-  }
 
-  void signUserOut(BuildContext context) {
-    _dbService.signOut().then((_) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    }).catchError((error) {
-      print("Sign out failed: $error");
+  Future<void> _fetchAndDisplayUserData() async {
+    setState(() {
+      _userData = {
+        'uid': _prefs?.getString('uid') ?? '',
+        'email': _prefs?.getString('email') ?? '',
+        'displayName': _prefs?.getString('displayName') ?? '',
+        'photoURL': _prefs?.getString('photoURL') ?? '',
+        'phoneNum': _prefs?.getString('phoneNum') ?? '',
+        'createdAt': _prefs?.getString('createdAt') ?? '',
+        'address': _prefs?.getString('address') ?? '',
+        'status': _prefs?.getString('status') ?? '',
+      };
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    
-    User? user = _dbService.currentUser;
-    bool isLoggedIn = user != null;
-    String firstLetter = _userData['displayName']?.isNotEmpty == true ? _userData['displayName']!.substring(0, 1) : '';
+    String displayName = _userData['displayName'] ?? 'Guest';
+    String firstLetter =
+        displayName.isNotEmpty ? displayName.substring(0, 1) : '?';
+
+    // Define orange color for icons
+    final Color iconColor = Colors.orange.shade600;
+
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [const Color.fromRGBO(219, 180, 39, 1), Colors.blue.shade400],
-          ),
+          color: Colors.white,
         ),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.shade50,
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 30,
-                    child: Text(
-                      firstLetter.isEmpty ? '?' : firstLetter, // Initials or image can be added here
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  const Text(
+                    "BAYANi",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    _userData['displayName'] ?? ' ', // Assuming 'displayName' field exists
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.grey.shade300,
+                        child: Text(
+                          firstLetter,
+                          style: const TextStyle(
+                              fontSize: 28, color: Colors.black),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        "Hello, $displayName!",
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.home, color: Colors.white),
-              title: const Text('Home', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                if (ModalRoute.of(context)?.settings.name != '/') {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.wb_sunny, color: Colors.white),
-              title: const Text('Weather', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const WeatherPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.map, color: Colors.white),
-              title: const Text('Map', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MapPage()),
-                );
-              },
-            ),
-            if (isLoggedIn) ...[
-              ListTile(
-                leading: const Icon(Icons.settings, color: Colors.white),
-                title: const Text('Setting', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.of(context).pop(); // Close the drawer
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Dialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: SettingsWidget(),
-                    );
-                  },
-                );
-                },
-              ),
-            ],
-            const Divider(color: Colors.white),
-            if (isLoggedIn)
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.white),
-                title: const Text('Sign Out', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  signUserOut(context);
-                },
-              )
-            else
-              ListTile(
-                leading: const Icon(Icons.login, color: Colors.white),
-                title: const Text('Sign In', style: TextStyle(color: Colors.white)),
+            const Divider(color: Colors.grey),
+            _buildSectionTitle("General"),
+            _buildDrawerItem(
+                icon: Icons.home,
+                text: 'Home',
+                iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                   );
-                },
-              ),
+                }),
+            _buildDrawerItem(
+                icon: Icons.location_on,
+                text: 'Directories',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => HotlineDirectoriesPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.info,
+                text: 'About CDRRMO',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AboutCdrrmoPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.privacy_tip,
+                text: 'Privacy Policy',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PrivacyPolicyPage()),
+                  );
+                }),
+            const Divider(color: Colors.grey),
+            _buildSectionTitle("Emergency Guides"),
+            _buildDrawerItem(
+                icon: Icons.health_and_safety,
+                text: 'First Aid Tips',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FirstAidTipsPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.fire_extinguisher,
+                text: 'Fire Safety Tips',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => FireSafetyTipsPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.heart_broken_outlined,
+                text: 'CPR',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CprPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.security,
+                text: 'Personal Safety',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PersonalSafetyPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.health_and_safety,
+                text: 'Mental Health',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MentalHealthPage()),
+                  );
+                }),
+            const Divider(color: Colors.grey),
+            _buildSectionTitle("Account"),
+            _buildDrawerItem(
+                icon: Icons.person,
+                text: 'User Profile',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfilePage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.people,
+                text: 'Friends/Circle',
+                iconColor: iconColor,
+                onTap: () {}),
+            const Divider(color: Colors.grey),
+            _buildSectionTitle("App"),
+            _buildDrawerItem(
+                icon: Icons.info_outline,
+                text: 'About App',
+                iconColor: iconColor,
+                onTap: () {Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>  AboutAppPage()),
+                  );}),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      {required IconData icon,
+      required String text,
+      required Color iconColor,
+      required GestureTapCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor),
+      title: Text(text, style: const TextStyle(color: Colors.black)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
         ),
       ),
     );
