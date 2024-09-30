@@ -8,6 +8,7 @@ import 'package:citizen/pages/post_detail_page.dart';
 import 'package:citizen/pages/report_page.dart';
 import 'package:citizen/services/database_service.dart';
 import 'package:citizen/services/location_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -65,7 +66,8 @@ class _HomePageState extends State<HomePage> {
       double? latitude = _currentLocation?.latitude;
       double? longitude = _currentLocation?.longitude;
       print("Latitude: $latitude, Longitude: $longitude");
-      bool isLocationServiceEnabled = await _locationService.isLocationEnabled();
+      bool isLocationServiceEnabled =
+          await _locationService.isLocationEnabled();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Success: Access to location been granted'),
@@ -470,197 +472,229 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAnnouncements() {
-    List<String> announcements = [
-      'Announcement 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      'Announcement 2: Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-      'Announcement 3: Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-      'Announcement 4: Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-      'Announcement 5: Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-    ];
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _dbService.getLatestAnnouncements(), // Fetch data from Firebase
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error fetching announcements'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No announcements available'));
+        }
 
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color.fromARGB(255, 186, 186, 186)!,
-            const Color.fromARGB(255, 166, 159, 167)!
+        List<Map<String, dynamic>> announcements = snapshot.data!;
+
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color.fromARGB(255, 186, 186, 186)!,
+                const Color.fromARGB(255, 166, 159, 167)!
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          height: 250,
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _announcementsPageController,
+                  itemCount: announcements.length,
+                  itemBuilder: (context, index) {
+                    return _buildAnnouncementCard(announcements[index]);
+                  },
+                ),
+              ),
+              SizedBox(height: 10),
+              SmoothPageIndicator(
+                controller: _announcementsPageController,
+                count: announcements.length,
+                effect: WormEffect(
+                  dotHeight: 8,
+                  dotWidth: 8,
+                  spacing: 16,
+                  dotColor: Colors.grey,
+                  activeDotColor: Colors.blue,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnnouncementCard(Map<String, dynamic> announcement) {
+    // Convert Firebase Timestamp to DateTime
+    DateTime timestamp = (announcement['timestamp'] as Timestamp).toDate();
+    String formattedDate =
+        DateFormat('MMMM d, yyyy at h:mm a').format(timestamp);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                AnnouncementDetailPage(announcement: announcement),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        padding: EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 1),
+            ),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      height: 250,
-      child: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _announcementsPageController,
-              itemCount: announcements.length,
-              itemBuilder: (context, index) {
-                return _buildAnnouncementCard(announcements[index]);
-              },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              announcement['title'] ?? 'Announcement',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-          ),
-          SizedBox(height: 10),
-          SmoothPageIndicator(
-            controller: _announcementsPageController,
-            count: announcements.length,
-            effect: WormEffect(
-              dotHeight: 8,
-              dotWidth: 8,
-              spacing: 16,
-              dotColor: Colors.grey,
-              activeDotColor: Colors.blue,
+            SizedBox(height: 10),
+            Text(
+              announcement['summary'] ?? 'No summary available',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
-          ),
-        ],
+            SizedBox(height: 5),
+            Text(
+              formattedDate,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPosts() {
-    List<String> posts = [
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-    ];
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _dbService.getLatestPosts(),  // Fetch data from Firebase
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error fetching posts'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No posts available'));
+        }
 
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color.fromARGB(255, 186, 186, 186)!,
-            const Color.fromARGB(255, 166, 159, 167)!
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      height: 250,
-      child: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _postsPageController,
-              itemCount: posts.length,
-              itemBuilder: (context, index) {
-                return _buildPostCard(posts[index]);
-              },
+        List<Map<String, dynamic>> posts = snapshot.data!;
+
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color.fromARGB(255, 186, 186, 186)!,
+                const Color.fromARGB(255, 166, 159, 167)!
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [
+              BoxShadow(
+                color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
-          SizedBox(height: 10),
-          SmoothPageIndicator(
-            controller: _postsPageController,
-            count: posts.length,
-            effect: WormEffect(
-              dotHeight: 8,
-              dotWidth: 8,
-              spacing: 16,
-              dotColor: Colors.grey,
-              activeDotColor: Colors.blue,
-            ),
+          height: 250,
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _postsPageController,
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    return _buildPostCard(posts[index]);
+                  },
+                ),
+              ),
+              SizedBox(height: 10),
+              SmoothPageIndicator(
+                controller: _postsPageController,
+                count: posts.length,
+                effect: WormEffect(
+                  dotHeight: 8,
+                  dotWidth: 8,
+                  spacing: 16,
+                  dotColor: Colors.grey,
+                  activeDotColor: Colors.blue,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-Widget _buildAnnouncementCard(String announcement) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AnnouncementDetailScreen(announcement: announcement),
-        ),
-      );
-    },
-    child: Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.0),
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: Offset(0, 1),
+  Widget _buildPostCard(Map<String, dynamic> post) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailPage(post: post), // Navigate to post detail
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Announcement',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text(announcement),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildPostCard(String post) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PostDetailScreen(post: post),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 8.0),
+        padding: EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
-      );
-    },
-    child: Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.0),
-      padding: EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              post['title'] ?? 'Post', // Ensure title exists in post data
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(post['content'] ?? 'No content available'), // Display post content
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Post',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text(post),
-        ],
-      ),
-    ),
-  );
-}
-
+    );
+  }
 }

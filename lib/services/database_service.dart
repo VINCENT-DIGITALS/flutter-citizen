@@ -75,6 +75,72 @@ class DatabaseService {
     }
   }
 
+// Fetch announcements from Firestore
+  Future<List<Map<String, dynamic>>> getAnnouncements() async {
+    try {
+      QuerySnapshot snapshot = await _db
+          .collection('announcements')
+          .orderBy('timestamp', descending: true)
+          .get();
+      return snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+    } catch (e) {
+      print('Error getting announcements: $e');
+      return [];
+    }
+  }
+
+  // Method to fetch the latest 3 announcements from the 'announcements' collection
+  Future<List<Map<String, dynamic>>> getLatestAnnouncements() async {
+    QuerySnapshot snapshot = await _db
+        .collection('announcements')
+        .orderBy('timestamp', descending: true)
+        .limit(3)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id; // Optional: include document ID if needed
+      return data;
+    }).toList();
+  }
+
+  // Method to fetch the latest 3 announcements from the 'posts' collection
+  Future<List<Map<String, dynamic>>> getLatestPosts() async {
+    QuerySnapshot snapshot = await _db
+        .collection('posts')
+        .orderBy('timestamp', descending: true) // Order by the latest posts
+        .limit(3) // Fetch the latest 5 posts (adjust the limit as needed)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
+  }
+
+  // Function to fetch posts from Firestore
+  Future<List<Map<String, dynamic>>> getPosts() async {
+    try {
+      // Query the 'posts' collection in Firestore
+      QuerySnapshot querySnapshot = await _db
+          .collection('posts')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      // Map each document in the collection to a Map<String, dynamic>
+      List<Map<String, dynamic>> posts = querySnapshot.docs.map((doc) {
+        return doc.data() as Map<String, dynamic>;
+      }).toList();
+
+      return posts;
+    } catch (e) {
+      // Handle errors (e.g., show in UI or log)
+      print('Error fetching posts: $e');
+      return [];
+    }
+  }
+
   // Method to update specific fields of the current user document
   Future<void> updateUserData({
     required Map<String, dynamic> updatedFields,
@@ -128,7 +194,6 @@ class DatabaseService {
     String? mediaUrl,
   }) async {
     try {
-      
       final reportData = {
         'reporterId': currentUser?.uid ?? 'unknown',
         'address': address,

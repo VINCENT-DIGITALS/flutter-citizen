@@ -1,5 +1,6 @@
 import 'package:citizen/pages/home_page.dart';
 import 'package:citizen/pages/hotlineDirectories_page.dart';
+import 'package:citizen/pages/post_page.dart';
 import 'package:citizen/pages/profile_page.dart';
 import 'package:citizen/sidebar_Pages/about_app_page.dart';
 import 'package:citizen/sidebar_Pages/about_cdrrmo_page.dart';
@@ -116,6 +117,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                }),
+                 _buildDrawerItem(
+                icon: Icons.home,
+                text: 'Post',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PostsPage()),
                   );
                 }),
             _buildDrawerItem(

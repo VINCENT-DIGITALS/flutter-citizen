@@ -1,3 +1,4 @@
+import 'package:citizen/pages/announcement_page.dart';
 import 'package:citizen/pages/home_page.dart';
 import 'package:citizen/pages/report_page.dart';
 import 'package:citizen/pages/weather_page.dart';
@@ -56,7 +57,16 @@ class _BottomNavBarState extends State<BottomNavBar> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ReportsSummaryPage(currentPage: 'SummaryReport')),
+              builder: (context) =>
+                  ReportsSummaryPage(currentPage: 'SummaryReport')),
+        );
+        break;
+      case 'announcement':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  AnnouncementsPage(currentPage: 'announcement')),
         );
         break;
     }
@@ -102,7 +112,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         return 0;
       case 'SummaryReport':
         return 1;
-      case 'update':
+      case 'announcement':
         return 2;
       case 'map':
         return 3;
@@ -121,7 +131,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       case 1:
         return 'report';
       case 2:
-        return 'update';
+        return 'announcement';
       case 3:
         return 'map';
       case 4:
