@@ -111,6 +111,14 @@ dev_dependencies:
   flutter_launcher_icons: 0.13.1
   image: 4.0.17
   lints: 3.0.0
+  
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/ICONLAUNCHER.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+
 
 flutter:
   uses-material-design: true
@@ -118,4 +126,9 @@ flutter:
     - lib/images/
     - lib/images/LOGODESC.png
     - lib/images/placeholder_image.png
+    - assets/images/LOGOAPP.png
+    - assets/images/placeholder_image.png
+    - assets/images/LOGOAPP.png
+    - assets/images/LOGODESC.png
+    - assets/images/ICONLAUNCHER.png
     - .env

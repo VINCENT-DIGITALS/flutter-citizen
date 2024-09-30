@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'localization/locales.dart';
 import 'services/auth_page.dart';
-
+import 'models/splash_screen.dart';
 void main() async {
   await dotenv.load(fileName: '.env');
   
@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,
-      home: const AuthPage(),
+      home: const SplashScreen(),
     );
   }
 
