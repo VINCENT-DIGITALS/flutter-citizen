@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:citizen/components/loading.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
@@ -38,6 +39,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
   bool _videoSelected = false;
   bool _imageSelected = false;
   bool _isLoading = false;
+  double? _latitude;
+  double? _longitude;
 
   List<String> incidentTypes = [
     'Car Accident',
@@ -90,6 +93,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
       String address = await _locationService.getAddressFromLocation(position);
       setState(() {
         _addressController.text = address;
+        _latitude = position.latitude; // Store latitude
+        _longitude = position.longitude; // Store longitude
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -142,7 +147,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
           await Gal.putVideo(
               mediaInfo.path!); // Save compressed video to gallery
         } else {
-          throw Exception('Video conversion failed. Path: ${mediaInfo?.path}');
+          throw ('Something went wrong, please use Image instead');
         }
         // Upload the video to Firebase Storage
         mediaUrl = await _dbService.uploadMedia(mediaFile, 'videos');
@@ -160,6 +165,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
         injuredCount: _injuredCountController.text,
         seriousness: _selectedSeriousness ?? '',
         mediaUrl: mediaUrl,
+        location: GeoPoint(_latitude!,
+            _longitude!), // Create the GeoPoint using _latitude and _longitude
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -181,7 +188,6 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
           // _descriptionController.dispose();
           // _landmarkController.dispose();
         });
-        
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -393,9 +399,10 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
               padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
               child: TextField(
                 controller: _addressController,
+                readOnly: true, // Disable typing
                 decoration: InputDecoration(
                   fillColor: Colors.white,
-                  hintText: 'Enter your current address...',
+                  hintText: 'Click the icon to find location',
                   labelText: 'This is your current address',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -407,7 +414,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                       ? CircularProgressIndicator()
                       : IconButton(
                           icon: Icon(Icons.my_location),
-                          onPressed: _getCurrentLocation,
+                          onPressed: _getCurrentLocation, // Automatically fill location
                         ),
                 ),
               ),

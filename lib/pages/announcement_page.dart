@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../components/bottom_bar.dart';
+import '../components/custom_drawer.dart';
 import '../services/database_service.dart';
 import 'announcement_detail_page.dart';
 
@@ -16,6 +18,7 @@ class AnnouncementsPage extends StatefulWidget {
 }
 
 class _AnnouncementsPageState extends State<AnnouncementsPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final DatabaseService _dbService = DatabaseService();
   List<Map<String, dynamic>> _announcements = [];
   bool _isLoading = true;
@@ -45,9 +48,11 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       appBar: AppBar(
         title: Text('Announcements'),
       ),
+      drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -122,6 +127,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                 );
               },
             ),
+            bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
   }
 }

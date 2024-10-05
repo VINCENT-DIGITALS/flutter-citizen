@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:video_player/video_player.dart'; // Add video player package
 
 class ReportDetailPage extends StatefulWidget {
@@ -14,7 +16,24 @@ class ReportDetailPage extends StatefulWidget {
 
 class _ReportDetailPageState extends State<ReportDetailPage> {
   bool _isMediaOpened = false;
+  bool _isMapExpanded = false;
   VideoPlayerController? _videoController;
+  MapController mapController = MapController();
+
+  LatLng? reportLocation; // Store the LatLng coordinates
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Fetch the GeoPoint from the report
+    GeoPoint? location =
+        widget.report['location']; // Ensure 'location' is the correct key
+    if (location != null) {
+      // Convert GeoPoint to LatLng
+      reportLocation = LatLng(location.latitude, location.longitude);
+    }
+  }
 
   @override
   void dispose() {
@@ -51,7 +70,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            
+
             // Formatting the Timestamp value here
             _buildDetailRow(
                 'Date & Time',
@@ -95,14 +114,47 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Add logic to open the map in a detailed view
+                  setState(() {
+                    _isMapExpanded = !_isMapExpanded;
+                  });
                 },
                 child: const Text('Expand Map'),
               ),
             ),
+            // Map Section
+            if (_isMapExpanded &&
+                reportLocation != null) // Only show map if location exists
+              SizedBox(
+                height: 300, // Set a fixed height for the map
+                child: _buildMapWidget(),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMapWidget() {
+    return FlutterMap(
+      mapController: mapController,
+      options: MapOptions(
+        initialCenter: reportLocation ?? LatLng(15.7140846,120.9001115), // Initial center from report
+        initialZoom: 5.0, // Set zoom level
+        onMapReady: () {
+          // Wait until the map is ready, then move the mapController
+          if (reportLocation != null) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              mapController.move(reportLocation!, 16.0);
+            });
+          }
+        },
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.app', //dev.fleaflet.flutter_map.example
+        ),
+      ],
     );
   }
 

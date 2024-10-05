@@ -11,7 +11,10 @@ const String createdAt = 'createdAt';
 const String address = 'address';
 const String status = 'status';
 
-
+// add latlong location
+// add issharing location
+// add friends
+// add address
 class SharedPreferencesService {
   static SharedPreferencesService? _instance;
   static late SharedPreferences _preferences;

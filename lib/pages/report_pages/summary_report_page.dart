@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-import '../components/bottom_bar.dart';
-import '../components/custom_drawer.dart';
+import '../../components/bottom_bar.dart';
+import '../../components/custom_drawer.dart';
 import 'report_detail_page.dart'; // For accessing the logged-in user
 
 class ReportsSummaryPage extends StatefulWidget {

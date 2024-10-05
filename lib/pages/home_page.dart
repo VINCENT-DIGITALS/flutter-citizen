@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'dart:async';
 
+import 'evacuationMap_page.dart';
+
 class HomePage extends StatefulWidget {
   final String currentPage;
 
@@ -40,6 +42,8 @@ class _HomePageState extends State<HomePage> {
   String _currentAddress = "";
   String _errorMessage = "";
   final LocationService _locationService = LocationService();
+  double? _latitude;
+  double? _longitude;
 
   @override
   void initState() {
@@ -62,10 +66,12 @@ class _HomePageState extends State<HomePage> {
       _currentAddress =
           await _locationService.getAddressFromLocation(_currentLocation!);
       _errorMessage = "";
+      setState(() {
+        _latitude = _currentLocation?.latitude; // Store latitude
+        _longitude = _currentLocation?.longitude; // Store longitude
+      });
 
-      double? latitude = _currentLocation?.latitude;
-      double? longitude = _currentLocation?.longitude;
-      print("Latitude: $latitude, Longitude: $longitude");
+      print("Latitude: $_latitude, Longitude: $_longitude");
       bool isLocationServiceEnabled =
           await _locationService.isLocationEnabled();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,15 +80,19 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.green,
         ),
       );
+      await _dbService.updateLocationSharing(
+        location: GeoPoint(_latitude!,
+            _longitude!), // Create the GeoPoint using _latitude and _longitude
+      );
     } catch (e) {
       _errorMessage = e.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Failed to get current location: Access to location been denied'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text(
+      //         'Failed to get current location: Access to location been denied'),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
     }
     setState(() {});
     print("$_currentLocation");
@@ -131,13 +141,6 @@ class _HomePageState extends State<HomePage> {
   void handleSOS() {
     // TODO: Add the SOS feature implementation here
     print("SOS feature triggered");
-  }
-
-  void _redirectToLogin(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-    );
   }
 
   @override
@@ -198,8 +201,7 @@ class _HomePageState extends State<HomePage> {
                     _buildEvacuationMapAndHotlineDir(),
                     SizedBox(height: 20),
                     _buildAnnouncements(),
-                    SizedBox(height: 20),
-                    _buildPosts(),
+                   
                   ],
                 ),
               ),
@@ -306,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                   },
                 );
               } else {
-                _redirectToLogin(context);
+                _dbService.redirectToLogin(context);
               }
             },
             child: Container(
@@ -352,7 +354,7 @@ class _HomePageState extends State<HomePage> {
                   },
                 );
               } else {
-                _redirectToLogin(context);
+                _dbService.redirectToLogin(context);
               }
             },
             child: Container(
@@ -396,7 +398,7 @@ class _HomePageState extends State<HomePage> {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return ReportPage();
+                  return EvacuationMapPage();
                 },
               );
             },
@@ -592,109 +594,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildPosts() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _dbService.getLatestPosts(),  // Fetch data from Firebase
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error fetching posts'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No posts available'));
-        }
-
-        List<Map<String, dynamic>> posts = snapshot.data!;
-
-        return Container(
-          padding: EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color.fromARGB(255, 186, 186, 186)!,
-                const Color.fromARGB(255, 166, 159, 167)!
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [
-              BoxShadow(
-                color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          height: 250,
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _postsPageController,
-                  itemCount: posts.length,
-                  itemBuilder: (context, index) {
-                    return _buildPostCard(posts[index]);
-                  },
-                ),
-              ),
-              SizedBox(height: 10),
-              SmoothPageIndicator(
-                controller: _postsPageController,
-                count: posts.length,
-                effect: WormEffect(
-                  dotHeight: 8,
-                  dotWidth: 8,
-                  spacing: 16,
-                  dotColor: Colors.grey,
-                  activeDotColor: Colors.blue,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPostCard(Map<String, dynamic> post) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostDetailPage(post: post), // Navigate to post detail
-          ),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8.0),
-        padding: EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16.0),
-          boxShadow: [
-            BoxShadow(
-              color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              post['title'] ?? 'Post', // Ensure title exists in post data
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(post['content'] ?? 'No content available'), // Display post content
-          ],
-        ),
-      ),
-    );
-  }
 }

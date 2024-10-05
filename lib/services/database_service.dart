@@ -12,15 +12,165 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../pages/login_page.dart';
+
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  /// Method to add or update a document with dynamic fields
+  Future<void> setDocument(
+      String collection, String docId, Map<String, dynamic> data,
+      {bool merge = true}) async {
+    try {
+      _checkAuthentication();
+      await _db
+          .collection(collection)
+          .doc(docId)
+          .set(data, SetOptions(merge: merge));
+      print("Document set successfully!");
+    } catch (e) {
+      print("Error setting document: $e");
+    }
+  }
+
+  /// Method to retrieve a document with dynamic fields
+  Future<Map<String, dynamic>?> getDocument(
+      String collection, String docId) async {
+    try {
+      _checkAuthentication();
+      DocumentSnapshot document =
+          await _db.collection(collection).doc(docId).get();
+      if (document.exists) {
+        return document.data() as Map<String, dynamic>?;
+      } else {
+        print("Document does not exist!");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching document: $e");
+      return null;
+    }
+  }
+
+  /// Method to update specific fields in a document with dynamic fields
+  Future<void> updateDocument(
+      String collection, String docId, Map<String, dynamic> data) async {
+    try {
+      _checkAuthentication();
+      await _db.collection(collection).doc(docId).update(data);
+      print("Document updated successfully!");
+    } catch (e) {
+      print("Error updating document: $e");
+    }
+  }
+
+  /// Method to delete a document or specific fields from a document
+  Future<void> deleteFields(
+      String collection, String docId, List<String> fields) async {
+    try {
+      _checkAuthentication();
+      Map<String, dynamic> updates = {};
+      for (String field in fields) {
+        updates[field] = FieldValue.delete();
+      }
+      await _db.collection(collection).doc(docId).update(updates);
+      print("Fields deleted successfully!");
+    } catch (e) {
+      print("Error deleting fields: $e");
+    }
+  }
+
+  // Method to delete a document with a specified ID
+  Future<void> deleteDocument(String collectionPath, String documentId) async {
+    _checkAuthentication();
+    return await _db.collection(collectionPath).doc(documentId).delete();
+  }
+
+  // Private method to check authentication
+  void _checkAuthentication() {
+    if (!isAuthenticated()) {
+      throw Exception("User not authenticated");
+    }
+  }
+
   // Check if user is authenticated
   bool isAuthenticated() {
     return _auth.currentUser != null;
   }
+
+  Future<void> addReport({
+    required String address,
+    required String landmark,
+    required String description,
+    required String incidentType,
+    required String injuredCount,
+    required String seriousness,
+    required GeoPoint location, // Use GeoPoint here
+    String? mediaUrl,
+  }) async {
+    try {
+      final reportData = {
+        'reporterId': currentUser?.uid ?? 'unknown',
+        'address': address,
+        'landmark': landmark,
+        'description': description,
+        'incidentType': incidentType,
+        'injuredCount': injuredCount,
+        'seriousness': seriousness,
+        'mediaUrl': mediaUrl ?? '', // Store media URL in Firestore
+        'acceptedByOperator': false, // Default to false until operator accepts
+        'responderTeam': null,
+        'timestamp': FieldValue.serverTimestamp(),
+        'location': location, // Store as GeoPoint
+      };
+
+      await _db.collection('reports').add(reportData);
+    } catch (e) {
+      throw Exception('Failed to add report: $e');
+    }
+  }
+
+  Future<String?> uploadMedia(File mediaFile, String mediaType) async {
+    try {
+      // Create a folder with the current date and time
+      String dateTimeNow = DateTime.now()
+          .toIso8601String(); // Example: '2024-09-14T12:34:56.789'
+
+      // Define the path as "reports" folder with a subfolder named by current date and time
+      String fileName = DateTime.now()
+          .millisecondsSinceEpoch
+          .toString(); // Unique filename based on timestamp
+      Reference ref = _storage.ref().child(
+          'reports/$dateTimeNow/$fileName'); // Folder: "reports/{current_date_time}"
+
+      // Upload the media file
+      UploadTask uploadTask = ref.putFile(mediaFile);
+      TaskSnapshot taskSnapshot = await uploadTask;
+
+      // Return the download URL of the uploaded file
+      return await taskSnapshot.ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload media: $e');
+    }
+  }
+  void redirectToLogin(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
+  }
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+    await GoogleSignIn().signOut();
+    SharedPreferencesService prefs =
+        await SharedPreferencesService.getInstance();
+    _clearUserData(prefs);
+  }
+
+// ----------------------------------------------- NEW METHOD ---------------------------------------------------------------
 
   // Check if an email already exists
   Future<bool> doesEmailExist(String email) async {
@@ -159,78 +309,31 @@ class DatabaseService {
     }
   }
 
-  Future<String?> uploadMedia(File mediaFile, String mediaType) async {
-    try {
-      // Create a folder with the current date and time
-      String dateTimeNow = DateTime.now()
-          .toIso8601String(); // Example: '2024-09-14T12:34:56.789'
-
-      // Define the path as "reports" folder with a subfolder named by current date and time
-      String fileName = DateTime.now()
-          .millisecondsSinceEpoch
-          .toString(); // Unique filename based on timestamp
-      Reference ref = _storage.ref().child(
-          'reports/$dateTimeNow/$fileName'); // Folder: "reports/{current_date_time}"
-
-      // Upload the media file
-      UploadTask uploadTask = ref.putFile(mediaFile);
-      TaskSnapshot taskSnapshot = await uploadTask;
-
-      // Return the download URL of the uploaded file
-      return await taskSnapshot.ref.getDownloadURL();
-    } catch (e) {
-      throw Exception('Failed to upload media: $e');
-    }
-  }
-
-  // Method to add a report to Firestore
-  Future<void> addReport({
-    required String address,
-    required String landmark,
-    required String description,
-    required String incidentType,
-    required String injuredCount,
-    required String seriousness,
-    String? mediaUrl,
+// Method to update or create locationSharing, latitude, longitude, and lastUpdated fields
+  Future<void> updateLocationSharing({
+    required GeoPoint location, // Use GeoPoint here
   }) async {
     try {
-      final reportData = {
-        'reporterId': currentUser?.uid ?? 'unknown',
-        'address': address,
-        'landmark': landmark,
-        'description': description,
-        'incidentType': incidentType,
-        'injuredCount': injuredCount,
-        'seriousness': seriousness,
-        'mediaUrl': mediaUrl ?? '', // Store media URL in Firestore
-        'acceptedByOperator': false, // Default to false until operator accepts
-        'responderTeam': '', // Add team when assigned
-        'timestamp': FieldValue.serverTimestamp(),
-      };
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('No user is currently signed in');
+      }
 
-      await _db.collection('reports').add(reportData);
+      final userRef = _db.collection('citizens').doc(user.uid);
+
+      // Set the locationSharing, location, and lastUpdated fields (creates if not exist)
+      await userRef.set(
+          {
+            'locationSharing': true, // Enable location sharing
+            'location': location, // Store as GeoPoint
+            'lastUpdated': FieldValue
+                .serverTimestamp(), // Update the last updated timestamp
+          },
+          SetOptions(
+              merge: true)); // Merge to ensure fields are created if not exist
     } catch (e) {
-      throw Exception('Failed to add report: $e');
-    }
-  }
-
-  // Method to update a document with a specified ID
-  Future<void> updateDocument(String collectionPath, String documentId,
-      Map<String, dynamic> data) async {
-    _checkAuthentication();
-    return await _db.collection(collectionPath).doc(documentId).update(data);
-  }
-
-  // Method to delete a document with a specified ID
-  Future<void> deleteDocument(String collectionPath, String documentId) async {
-    _checkAuthentication();
-    return await _db.collection(collectionPath).doc(documentId).delete();
-  }
-
-  // Private method to check authentication
-  void _checkAuthentication() {
-    if (!isAuthenticated()) {
-      throw Exception("User not authenticated");
+      // Handle errors
+      throw Exception('Error updating user location: $e');
     }
   }
 
@@ -593,14 +696,7 @@ class DatabaseService {
     }
   }
 
-  // Sign out
-  Future<void> signOut() async {
-    await _auth.signOut();
-    await GoogleSignIn().signOut();
-    SharedPreferencesService prefs =
-        await SharedPreferencesService.getInstance();
-    _clearUserData(prefs);
-  }
+
 
   // Clear user data from SharedPreferences
   void _clearUserData(SharedPreferencesService prefs) {

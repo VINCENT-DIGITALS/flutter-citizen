@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,
-      home: const SplashScreen(),
+      home: const AuthPage(),
     );
   }
 

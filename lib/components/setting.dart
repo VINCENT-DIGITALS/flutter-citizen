@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
+import '../services/database_service.dart';
+
 class SettingsWidget extends StatefulWidget {
   @override
   _SettingsWidgetState createState() => _SettingsWidgetState();
@@ -16,6 +18,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   bool _notificationsEnabled = true;
   bool _locationBasedServicesEnabled = true;
   bool _emergencyAlertsEnabled = true;
+  final DatabaseService _dbService = DatabaseService();
 
   @override
   void initState() {
@@ -99,18 +102,18 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               },
             ),
 
-            ListTile(
-              leading: Icon(Icons.help_outline_rounded, color: Colors.orange),
-              title: Text('Emergency Guides'),
-              trailing: Icon(Icons.arrow_forward_ios, color: Colors.orange),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => EmergencyGuidesPage()),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: Icon(Icons.help_outline_rounded, color: Colors.orange),
+            //   title: Text('Emergency Guides'),
+            //   trailing: Icon(Icons.arrow_forward_ios, color: Colors.orange),
+            //   onTap: () {
+            //     Navigator.pushReplacement(
+            //       context,
+            //       MaterialPageRoute(
+            //           builder: (context) => EmergencyGuidesPage()),
+            //     );
+            //   },
+            // ),
 
             // Language Dropdown
             ListTile(
@@ -133,25 +136,48 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 },
               ),
             ),
-            // Log out Button
-            SizedBox(height: 16),
+
+            // Conditional Login/Logout Button
             Center(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.redAccent, // Red button as per the image
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                ),
-                onPressed: () {
-                  // Log out logic
-                },
-                icon: Icon(Icons.logout, color: Colors.white),
-                label: Text('Log out', style: TextStyle(color: Colors.white)),
-              ),
+              child: _dbService.isAuthenticated()
+                  ? ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 12),
+                      ),
+                      onPressed: () async {
+                        try {
+                          await _dbService.signOut();
+                          Navigator.of(context).pop();
+                        } catch (e) {
+                          print('Logout failed: $e');
+                        }
+                      },
+                      icon: Icon(Icons.logout, color: Colors.white),
+                      label: Text('Log out',
+                          style: TextStyle(color: Colors.white)),
+                    )
+                  : ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.greenAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 10),
+                      ),
+                      onPressed: () {
+                        // Navigate to the login screen
+                        _dbService.redirectToLogin(context);
+                      },
+                      icon: Icon(Icons.login, color: Colors.white),
+                      label:
+                          Text('Login', style: TextStyle(color: Colors.white)),
+                    ),
             ),
           ],
         ),

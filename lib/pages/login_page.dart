@@ -22,7 +22,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final DatabaseService  _dbService = DatabaseService ();
+  final DatabaseService _dbService = DatabaseService();
   // text editing controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -46,31 +46,29 @@ class _LoginPageState extends State<LoginPage> {
 
   // sign user in method
   void signUserIn() async {
-    
-
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-    Fluttertoast.showToast(
-      msg: "Fields must not be empty",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.red,
-      textColor: Colors.white,
-    );
-    return;
-  }
-  if (!DatabaseService ().isValidEmail(emailController.text)) {
-       Fluttertoast.showToast(
-      msg: "Please enter a valid email address",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.red,
-      textColor: Colors.white,
-    );
-    return;
-  }
+      Fluttertoast.showToast(
+        msg: "Fields must not be empty",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+    if (!DatabaseService().isValidEmail(emailController.text)) {
+      Fluttertoast.showToast(
+        msg: "Please enter a valid email address",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
 
     LoadingIndicatorDialog().show(context);
-    
+
     try {
       String? user = await _dbService.signInWithEmail(
         emailController.text,
@@ -107,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void signInWithGoogle() async {
-    await DatabaseService ().signOut();
+    await DatabaseService().signOut();
     String? result = await DatabaseService().signInWithGoogle();
     if (result != null) {
       Fluttertoast.showToast(
@@ -209,8 +207,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Expanded(
                       child: Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(10, 10, 10, 10),
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                            10, 10, 10, 10),
                         child: Image.asset(
                           logoPath,
                           width: constraints.maxWidth *
@@ -247,10 +245,10 @@ class _LoginPageState extends State<LoginPage> {
                                 10, 10, 10, 10),
                             child: Image.asset(
                               logoPath,
-                               width: MediaQuery.of(context).size.width *
-                                   1.6, // Adjust width based on screen size
-                               height: MediaQuery.of(context).size.height *
-                                   0.2, // Adjust height based on screen size
+                              width: MediaQuery.of(context).size.width *
+                                  1.6, // Adjust width based on screen size
+                              height: MediaQuery.of(context).size.height *
+                                  0.2, // Adjust height based on screen size
                             ),
                           ),
                           _buildLoginForm(containerWidth)
@@ -498,21 +496,27 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  0, 10, 0, 0),
                               child: ElevatedButton(
                                 onPressed: signUserIn,
                                 style: ButtonStyle(
                                   padding: MaterialStateProperty.all(
-                                    const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 30, vertical: 15),
                                   ),
                                   shape: MaterialStateProperty.all(
                                     RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(15),
                                     ),
                                   ),
-                                  backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                                    if (states.contains(MaterialState.pressed)) {
-                                      return const Color.fromARGB(255, 93, 255, 68); // Color when button is pressed
+                                  backgroundColor:
+                                      MaterialStateProperty.resolveWith<Color>(
+                                          (states) {
+                                    if (states
+                                        .contains(MaterialState.pressed)) {
+                                      return const Color.fromARGB(255, 93, 255,
+                                          68); // Color when button is pressed
                                     }
                                     return Colors.blue; // Default color
                                   }),
@@ -527,27 +531,39 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
                             Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  0, 10, 0, 0),
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => HomePage()),
+                                    MaterialPageRoute(
+                                        builder: (context) => HomePage()),
                                   );
                                 },
                                 style: ButtonStyle(
                                   padding: MaterialStateProperty.all(
-                                    const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 15, vertical: 5),
                                   ),
                                   shape: MaterialStateProperty.all(
                                     RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(15),
                                     ),
                                   ),
-                                  backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                                    if (states.contains(MaterialState.pressed)) {
-                                      return Colors.grey[700]!; // Color when button is pressed
+                                  backgroundColor:
+                                      MaterialStateProperty.resolveWith<Color>(
+                                          (states) {
+                                    if (states
+                                        .contains(MaterialState.pressed)) {
+                                      return Colors.grey[
+                                          700]!; // Color when button is pressed
                                     }
                                     return Colors.grey; // Default color
                                   }),

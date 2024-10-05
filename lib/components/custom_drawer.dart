@@ -13,6 +13,8 @@ import 'package:citizen/sidebar_Pages/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../pages/emergenacyGuides_page.dart';
+
 class CustomDrawer extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
 
@@ -119,16 +121,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 }),
-                 _buildDrawerItem(
-                icon: Icons.home,
-                text: 'Post',
-                iconColor: iconColor,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PostsPage()),
-                  );
-                }),
+            // _buildDrawerItem(
+            //     icon: Icons.home,
+            //     text: 'Post',
+            //     iconColor: iconColor,
+            //     onTap: () {
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(builder: (context) => const PostsPage()),
+            //       );
+            //     }),
             _buildDrawerItem(
                 icon: Icons.location_on,
                 text: 'Directories',
@@ -140,27 +142,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         builder: (context) => HotlineDirectoriesPage()),
                   );
                 }),
-            _buildDrawerItem(
-                icon: Icons.info,
-                text: 'About CDRRMO',
-                iconColor: iconColor,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AboutCdrrmoPage()),
-                  );
-                }),
-            _buildDrawerItem(
-                icon: Icons.privacy_tip,
-                text: 'Privacy Policy',
-                iconColor: iconColor,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => PrivacyPolicyPage()),
-                  );
-                }),
+
             const Divider(color: Colors.grey),
             _buildSectionTitle("Emergency Guides"),
             _buildDrawerItem(
@@ -215,6 +197,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     MaterialPageRoute(builder: (context) => MentalHealthPage()),
                   );
                 }),
+            _buildDrawerItem(
+                icon: Icons.more_horiz_outlined,
+                text: 'More Guides',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => EmergencyGuidesPage()),
+                  );
+                }),
             const Divider(color: Colors.grey),
             _buildSectionTitle("Account"),
             _buildDrawerItem(
@@ -233,17 +226,41 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 text: 'Friends/Circle',
                 iconColor: iconColor,
                 onTap: () {}),
+                
             const Divider(color: Colors.grey),
+
             _buildSectionTitle("App"),
+            _buildDrawerItem(
+                icon: Icons.info,
+                text: 'About CDRRMO',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AboutCdrrmoPage()),
+                  );
+                }),
+            _buildDrawerItem(
+                icon: Icons.privacy_tip,
+                text: 'Privacy Policy',
+                iconColor: iconColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PrivacyPolicyPage()),
+                  );
+                }),
             _buildDrawerItem(
                 icon: Icons.info_outline,
                 text: 'About App',
                 iconColor: iconColor,
-                onTap: () {Navigator.push(
+                onTap: () {
+                  Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>  AboutAppPage()),
-                  );}),
+                    MaterialPageRoute(builder: (context) => AboutAppPage()),
+                  );
+                }),
           ],
         ),
       ),

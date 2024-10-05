@@ -1,6 +1,6 @@
 import 'package:citizen/pages/announcement_page.dart';
 import 'package:citizen/pages/home_page.dart';
-import 'package:citizen/pages/report_page.dart';
+
 import 'package:citizen/pages/weather_page.dart';
 import 'package:citizen/pages/map_page.dart';
 import 'package:citizen/pages/login_page.dart';
@@ -9,7 +9,7 @@ import 'package:citizen/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../pages/summary_report_page.dart';
+import '../pages/report_pages/summary_report_page.dart';
 
 class BottomNavBar extends StatefulWidget {
   final String currentPage;
