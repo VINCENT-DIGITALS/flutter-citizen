@@ -1,10 +1,15 @@
 import 'package:citizen/pages/emergenacyGuides_page.dart';
 import 'package:citizen/pages/profile_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
 import '../services/database_service.dart';
+import '../services/foreground_service.dart';
+import '../services/location_service.dart';
+import '../services/shared_pref.dart';
 
 class SettingsWidget extends StatefulWidget {
   @override
@@ -18,7 +23,12 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   bool _notificationsEnabled = true;
   bool _locationBasedServicesEnabled = true;
   bool _emergencyAlertsEnabled = true;
+  bool _isLocationSharingEnabled = false; // Location sharing state
+
   final DatabaseService _dbService = DatabaseService();
+  final MyForegroundService _foregroundService =
+      MyForegroundService(); // Foreground service
+  final LocationService _locationService = LocationService();
 
   @override
   void initState() {
@@ -26,25 +36,90 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     _flutterLocalization = FlutterLocalization.instance;
     _currentLocale = 'en'; // Set a default value
     _loadLocale();
+    _loadLocationSharingStateFromDB(); // Load the location sharing state from the database
   }
 
-  Future<void> _loadLocale() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? locale = prefs.getString('locale') ?? 'en';
-    setState(() {
-      _currentLocale = locale;
-    });
-    _flutterLocalization.translate(locale);
+// Load locale from SharedPreferences using SharedPreferencesService
+Future<void> _loadLocale() async {
+  SharedPreferencesService prefsService = await SharedPreferencesService.getInstance();
+  String? locale = prefsService.getData('locale') ?? 'en';  // Retrieve the locale
+  setState(() {
+    _currentLocale = locale!;
+  });
+  _flutterLocalization.translate(locale!);
+}
+
+// Save locale using SharedPreferencesService
+Future<void> _setLocale(String? value) async {
+  if (value == null) return;
+  SharedPreferencesService prefsService = await SharedPreferencesService.getInstance();
+  prefsService.saveData('locale', value);  // Save the locale
+  setState(() {
+    _currentLocale = value;
+  });
+  _flutterLocalization.translate(value);
+}
+
+  // Load location sharing state from the database
+  Future<void> _loadLocationSharingStateFromDB() async {
+    try {
+      // Fetch the user document from Firestore using the method from DatabaseService
+      Map<String, dynamic>? userData = await _dbService.getDocument('citizens');
+
+      if (userData != null && userData.containsKey('locationSharing')) {
+        setState(() {
+          _isLocationSharingEnabled = userData['locationSharing'] as bool;
+        });
+      } else {
+        print("Location sharing value not found in database.");
+      }
+    } catch (e) {
+      print("Error loading location sharing state from database: $e");
+    }
   }
 
-  Future<void> _setLocale(String? value) async {
-    if (value == null) return;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('locale', value);
+// Save location sharing state to preferences using SharedPreferencesService
+  Future<void> _setLocationSharingState(bool value) async {
+    SharedPreferencesService prefsService =
+        await SharedPreferencesService.getInstance();
+    prefsService.saveLocationSharing(
+        value); // Use the method from SharedPreferencesService
+  }
+
+// Toggle location sharing
+  Future<void> _toggleLocationSharing(bool value) async {
     setState(() {
-      _currentLocale = value;
+      _isLocationSharingEnabled = value;
     });
-    _flutterLocalization.translate(value);
+
+    await _setLocationSharingState(value);
+
+    if (value) {
+      // Start the foreground service to track location
+      await _foregroundService.startForegroundService();
+
+      // Manually update Firestore with locationSharing = true when toggling on
+      try {
+        // Ensure location permissions are granted
+        bool hasPermission =
+            await _locationService.checkLocationServicesAndPermissions();
+        if (hasPermission) {
+          Position position = await _locationService.getCurrentLocation();
+          GeoPoint location = GeoPoint(position.latitude, position.longitude);
+
+          // Directly update Firestore with location and locationSharing = true
+          await _dbService.updateLocationSharing(
+            location: location,
+            locationSharing: true, // Set locationSharing to true here
+          );
+        }
+      } catch (e) {
+        print('Error updating Firestore when enabling location sharing: $e');
+      }
+    } else {
+      // Stop the foreground service and update location sharing to false
+      await _foregroundService.stopForegroundService();
+    }
   }
 
   @override
@@ -102,19 +177,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               },
             ),
 
-            // ListTile(
-            //   leading: Icon(Icons.help_outline_rounded, color: Colors.orange),
-            //   title: Text('Emergency Guides'),
-            //   trailing: Icon(Icons.arrow_forward_ios, color: Colors.orange),
-            //   onTap: () {
-            //     Navigator.pushReplacement(
-            //       context,
-            //       MaterialPageRoute(
-            //           builder: (context) => EmergencyGuidesPage()),
-            //     );
-            //   },
-            // ),
-
             // Language Dropdown
             ListTile(
               leading: Icon(Icons.language, color: Colors.orange),
@@ -136,6 +198,38 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 },
               ),
             ),
+
+            // Show Location Sharing Toggle only if the user is authenticated
+            if (_dbService
+                .isAuthenticated()) // Check if the user is authenticated
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SwitchListTile(
+                    activeColor: Colors.orange,
+                    title: Row(
+                      children: [
+                        Icon(Icons.location_on, color: Colors.orange),
+                        SizedBox(
+                            width: constraints.maxWidth *
+                                0.02), // Responsive spacing
+                        Flexible(
+                          child: Text(
+                            'Location Sharing',
+                            style: TextStyle(
+                              fontSize: MediaQuery.of(context).size.width *
+                                  0.04, // Responsive text size
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    value: _isLocationSharingEnabled,
+                    onChanged: (bool value) {
+                      _toggleLocationSharing(value);
+                    },
+                  );
+                },
+              ),
 
             // Conditional Login/Logout Button
             Center(

@@ -80,10 +80,10 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.green,
         ),
       );
-      await _dbService.updateLocationSharing(
-        location: GeoPoint(_latitude!,
-            _longitude!), // Create the GeoPoint using _latitude and _longitude
-      );
+      // await _dbService.updateLocationSharing(
+      //   location: GeoPoint(_latitude!,
+      //       _longitude!), // Create the GeoPoint using _latitude and _longitude
+      // );
     } catch (e) {
       _errorMessage = e.toString();
       // ScaffoldMessenger.of(context).showSnackBar(

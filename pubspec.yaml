@@ -104,6 +104,9 @@ dependencies:
   gal: ^2.3.0
   location: ^6.0.2
   shimmer: ^3.0.0
+  flutter_foreground_task: ^8.10.4
+  flutter_local_notifications: ^17.2.3
+  firebase_messaging: ^14.9.4
 
 
 dev_dependencies:

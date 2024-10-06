@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String uid = 'uid';
@@ -10,18 +8,18 @@ const String phoneNum = 'phoneNum';
 const String createdAt = 'createdAt';
 const String address = 'address';
 const String status = 'status';
+const String latitude = 'latitude';
+const String longitude = 'longitude';
+const String isSharingLocation = 'isSharingLocation';
+const String friends = 'friends'; // A list of friend IDs or names
 
-// add latlong location
-// add issharing location
-// add friends
-// add address
 class SharedPreferencesService {
   static SharedPreferencesService? _instance;
   static late SharedPreferences _preferences;
 
   SharedPreferencesService._();
 
-  // Using a singleton pattern
+  // Singleton pattern
   static Future<SharedPreferencesService> getInstance() async {
     if (_instance == null) {
       _instance = SharedPreferencesService._();
@@ -61,5 +59,26 @@ class SharedPreferencesService {
     userData.forEach((key, value) {
       saveData(key, value);
     });
+  }
+
+  // Method to save latitude and longitude
+  void saveLocation(double lat, double lon) {
+    saveData(latitude, lat);
+    saveData(longitude, lon);
+  }
+
+  // Method to save location-sharing state
+  void saveLocationSharing(bool isSharing) {
+    saveData(isSharingLocation, isSharing);
+  }
+
+  // Method to save friends list
+  void saveFriends(List<String> friendsList) {
+    saveData(friends, friendsList);
+  }
+
+  // Method to retrieve friends list
+  List<String> getFriends() {
+    return _preferences.getStringList(friends) ?? [];
   }
 }

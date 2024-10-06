@@ -41,12 +41,17 @@ class DatabaseService {
   }
 
   /// Method to retrieve a document with dynamic fields
-  Future<Map<String, dynamic>?> getDocument(
-      String collection, String docId) async {
+  Future<Map<String, dynamic>?> getDocument(String collection) async {
     try {
+      // Ensure the user is authenticated
+      final user = _auth.currentUser;
+      if (user == null) {
+        print("User is not authenticated!");
+        return null;
+      }
       _checkAuthentication();
       DocumentSnapshot document =
-          await _db.collection(collection).doc(docId).get();
+          await _db.collection(collection).doc(user.uid).get();
       if (document.exists) {
         return document.data() as Map<String, dynamic>?;
       } else {
@@ -103,6 +108,35 @@ class DatabaseService {
   // Check if user is authenticated
   bool isAuthenticated() {
     return _auth.currentUser != null;
+  }
+
+// Method to update or create locationSharing, latitude, longitude, and lastUpdated fields
+  Future<void> updateLocationSharing({
+    required GeoPoint location, // Use GeoPoint here
+    required bool locationSharing, // New parameter for locationSharing
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('No user is currently signed in');
+      }
+
+      final userRef = _db.collection('citizens').doc(user.uid);
+
+      // Set the locationSharing, location, and lastUpdated fields (creates if not exist)
+      await userRef.set(
+          {
+            'locationSharing': locationSharing, // Enable location sharing
+            'location': location, // Store as GeoPoint
+            'lastUpdated': FieldValue
+                .serverTimestamp(), // Update the last updated timestamp
+          },
+          SetOptions(
+              merge: true)); // Merge to ensure fields are created if not exist
+    } catch (e) {
+      // Handle errors
+      throw Exception('Error updating user location: $e');
+    }
   }
 
   Future<void> addReport({
@@ -558,34 +592,6 @@ class DatabaseService {
     } catch (e) {
       // Handle errors
       throw Exception('Error updating user data: $e');
-    }
-  }
-
-// Method to update or create locationSharing, latitude, longitude, and lastUpdated fields
-  Future<void> updateLocationSharing({
-    required GeoPoint location, // Use GeoPoint here
-  }) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        throw Exception('No user is currently signed in');
-      }
-
-      final userRef = _db.collection('citizens').doc(user.uid);
-
-      // Set the locationSharing, location, and lastUpdated fields (creates if not exist)
-      await userRef.set(
-          {
-            'locationSharing': true, // Enable location sharing
-            'location': location, // Store as GeoPoint
-            'lastUpdated': FieldValue
-                .serverTimestamp(), // Update the last updated timestamp
-          },
-          SetOptions(
-              merge: true)); // Merge to ensure fields are created if not exist
-    } catch (e) {
-      // Handle errors
-      throw Exception('Error updating user location: $e');
     }
   }
 
