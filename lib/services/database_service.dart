@@ -19,6 +19,11 @@ class DatabaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // Getter for the current user
+  User? get currentUser {
+    return _auth.currentUser;
+  }
+
   /// Method to add or update a document with dynamic fields
   Future<void> setDocument(
       String collection, String docId, Map<String, dynamic> data,
@@ -155,12 +160,14 @@ class DatabaseService {
       throw Exception('Failed to upload media: $e');
     }
   }
+
   void redirectToLogin(BuildContext context) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
+
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
@@ -170,8 +177,258 @@ class DatabaseService {
     _clearUserData(prefs);
   }
 
-// ----------------------------------------------- NEW METHOD ---------------------------------------------------------------
+//------------------------FRIENDS METHODS------------------------------------------------------------------------
 
+// Search users by displayName and exclude current user and already friends
+  Future<List<DocumentSnapshot>> searchUsers(String query) async {
+    try {
+      String? currentUserId = currentUser?.uid;
+
+      if (currentUserId == null) {
+        return []; // Handle case if the user is not authenticated
+      }
+
+      // Fetch the current user's document to get the list of friends
+      DocumentSnapshot currentUserSnapshot =
+          await _db.collection('citizens').doc(currentUserId).get();
+      Map<String, dynamic>? currentUserData =
+          currentUserSnapshot.data() as Map<String, dynamic>?;
+      List<dynamic> currentUserFriends = currentUserData?['friends'] ?? [];
+
+      // Query to search users based on displayName
+      QuerySnapshot usersSnapshot = await _db
+          .collection('citizens')
+          .where('displayName', isGreaterThanOrEqualTo: query)
+          .where('displayName', isLessThanOrEqualTo: query + '\uf8ff')
+          .get();
+
+      // Filter the results to exclude the current user and already friends
+      List<DocumentSnapshot> filteredUsers = usersSnapshot.docs
+          .where((doc) =>
+              doc.id !=
+                  currentUserId && // Exclude the current user by their UID
+              !currentUserFriends
+                  .contains(doc.id)) // Exclude users who are already friends
+          .toList();
+
+      return filteredUsers;
+    } catch (e) {
+      print('Error searching users: $e');
+      return [];
+    }
+  }
+
+// Send friend request and initialize pendingRequests if necessary
+  Future<void> sendFriendRequest(String friendId) async {
+    String? currentUserId = currentUser?.uid;
+    if (currentUserId == null) {
+      print('Unauthenticated user. Cannot send friend request.');
+      return;
+    }
+
+    DocumentReference friendDocRef =
+        _db.collection('citizens').doc(friendId); // Ensure correct collection
+
+    try {
+      await _db.runTransaction((transaction) async {
+        DocumentSnapshot friendDocSnapshot =
+            await transaction.get(friendDocRef);
+
+        if (!friendDocSnapshot.exists) {
+          print('Friend document does not exist');
+          return;
+        }
+
+        Map<String, dynamic> friendData =
+            friendDocSnapshot.data() as Map<String, dynamic>? ?? {};
+
+        List<dynamic> pendingRequests = friendData['pendingRequests'] ?? [];
+
+        // Check for duplicates
+        if (pendingRequests.contains(currentUserId)) {
+          print('Friend request already sent.');
+          return;
+        }
+
+        // Add the request
+        pendingRequests.add(currentUserId);
+
+        transaction.update(friendDocRef, {
+          'pendingRequests': pendingRequests,
+        });
+        print('Friend request sent successfully.');
+      });
+    } catch (e) {
+      print('Error sending friend request: $e');
+    }
+  }
+
+// Get pending friend requests
+  Stream<DocumentSnapshot> getPendingRequests() {
+    String? currentUserId = currentUser?.uid;
+    if (currentUserId == null) {
+      print('Unauthenticated user. Cannot get pending requests.');
+      throw Exception('Unauthenticated user');
+    }
+    return _db.collection('citizens').doc(currentUserId).snapshots();
+  }
+
+// Accept friend request and initialize friends if necessary
+  Future<void> acceptFriendRequest(String friendId) async {
+    String? currentUserId = currentUser?.uid;
+    if (currentUserId == null) {
+      print('Unauthenticated user. Cannot accept friend request.');
+      return;
+    }
+
+    DocumentReference currentUserRef =
+        _db.collection('citizens').doc(currentUserId);
+    DocumentReference friendDocRef = _db.collection('citizens').doc(friendId);
+
+    try {
+      await _db.runTransaction((transaction) async {
+        DocumentSnapshot currentUserSnapshot =
+            await transaction.get(currentUserRef);
+        DocumentSnapshot friendDocSnapshot =
+            await transaction.get(friendDocRef);
+
+        if (!currentUserSnapshot.exists || !friendDocSnapshot.exists) {
+          print('One of the documents does not exist.');
+          return;
+        }
+
+        Map<String, dynamic> currentUserData =
+            currentUserSnapshot.data() as Map<String, dynamic>;
+        Map<String, dynamic> friendData =
+            friendDocSnapshot.data() as Map<String, dynamic>;
+
+        List<dynamic> currentUserFriends = currentUserData['friends'] ?? [];
+        List<dynamic> friendFriends = friendData['friends'] ?? [];
+        List<dynamic> pendingRequests =
+            currentUserData['pendingRequests'] ?? [];
+
+        if (!currentUserFriends.contains(friendId)) {
+          currentUserFriends.add(friendId);
+        }
+
+        if (!friendFriends.contains(currentUserId)) {
+          friendFriends.add(currentUserId);
+        }
+
+        pendingRequests.remove(friendId);
+
+        transaction.update(currentUserRef, {
+          'friends': currentUserFriends,
+          'pendingRequests': pendingRequests,
+        });
+
+        transaction.update(friendDocRef, {
+          'friends': friendFriends,
+        });
+
+        print('Friend request accepted successfully.');
+      });
+    } catch (e) {
+      print('Error accepting friend request: $e');
+    }
+  }
+
+// Decline friend request
+  Future<void> declineFriendRequest(String friendId) async {
+    String? currentUserId = currentUser?.uid;
+    if (currentUserId == null) {
+      print('Unauthenticated user. Cannot decline friend request.');
+      return;
+    }
+
+    DocumentReference currentUserRef =
+        _db.collection('citizens').doc(currentUserId);
+
+    try {
+      await _db.runTransaction((transaction) async {
+        DocumentSnapshot currentUserSnapshot =
+            await transaction.get(currentUserRef);
+
+        if (!currentUserSnapshot.exists) {
+          print('User document does not exist.');
+          return;
+        }
+
+        Map<String, dynamic> currentUserData =
+            currentUserSnapshot.data() as Map<String, dynamic>;
+        List<dynamic> pendingRequests =
+            currentUserData['pendingRequests'] ?? [];
+
+        pendingRequests.remove(friendId);
+
+        transaction.update(currentUserRef, {
+          'pendingRequests': pendingRequests,
+        });
+
+        print('Friend request declined successfully.');
+      });
+    } catch (e) {
+      print('Error declining friend request: $e');
+    }
+  }
+
+  // Fetch current user's friends
+  Future<List<DocumentSnapshot>> getFriends() async {
+    String? currentUserId = currentUser?.uid;
+    DocumentSnapshot currentUserSnapshot =
+        await _db.collection('citizens').doc(currentUserId).get();
+    List<dynamic> friendsIds =
+        (currentUserSnapshot.data() as Map<String, dynamic>)['friends'] ?? [];
+
+    // Fetch friends' details
+    if (friendsIds.isEmpty) return [];
+    QuerySnapshot friendsSnapshot = await _db
+        .collection('citizens')
+        .where(FieldPath.documentId, whereIn: friendsIds)
+        .get();
+    return friendsSnapshot.docs;
+  }
+
+// Remove friend from both the user's and the friend's friends list
+  Future<void> removeFriend(String friendId) async {
+    String? currentUserId = currentUser?.uid;
+
+    if (currentUserId == null) return;
+
+    // Get references for both current user and the friend
+    DocumentReference currentUserRef =
+        _db.collection('citizens').doc(currentUserId);
+    DocumentReference friendRef = _db.collection('citizens').doc(friendId);
+
+    // Get current user's document
+    DocumentSnapshot currentUserSnapshot = await currentUserRef.get();
+    List<dynamic> currentUserFriends =
+        (currentUserSnapshot.data() as Map<String, dynamic>)['friends'] ?? [];
+
+    // Get friend's document
+    DocumentSnapshot friendSnapshot = await friendRef.get();
+    List<dynamic> friendFriends =
+        (friendSnapshot.data() as Map<String, dynamic>)['friends'] ?? [];
+
+    // Remove friend from current user's friends list
+    currentUserFriends.remove(friendId);
+
+    // Remove current user from friend's friends list
+    friendFriends.remove(currentUserId);
+
+    // Update both users' documents
+    await currentUserRef.update({
+      'friends': currentUserFriends,
+    });
+
+    await friendRef.update({
+      'friends': friendFriends,
+    });
+  }
+
+// ----------------------------------------------- NEW AND IMPROVED METHOD ABOVE ---------------------------------------------------------------
+
+// ----------------------------------------------- OLD METHOD BELOW TO BE MIGRATE TO NEW ---------------------------------------------------------------
   // Check if an email already exists
   Future<bool> doesEmailExist(String email) async {
     // Query all relevant collections where an email might exist
@@ -193,11 +450,6 @@ class DatabaseService {
     final results = await Future.wait([citizenQuery]);
     final isCitizen = results[0].docs.isNotEmpty;
     return isCitizen;
-  }
-
-  // Getter for the current user
-  User? get currentUser {
-    return _auth.currentUser;
   }
 
   // Method to fetch current user data once
@@ -352,26 +604,6 @@ class DatabaseService {
       print('Error fetching weather data: $e');
       return null;
     }
-  }
-
-  Future<void> addFriends(String userId, List<String> friendIds) async {
-    final friendsDoc = _db.collection("friends").doc(userId);
-    await friendsDoc.set({
-      'friendIds': FieldValue.arrayUnion(friendIds),
-    }, SetOptions(merge: true));
-  }
-
-  Future<List<String>> getFriends(String userId) async {
-    final friendsDoc = _db.collection("friends").doc(userId);
-    final docSnapshot = await friendsDoc.get();
-
-    if (docSnapshot.exists) {
-      final data = docSnapshot.data();
-      if (data != null && data['friendIds'] != null) {
-        return List<String>.from(data['friendIds']);
-      }
-    }
-    return [];
   }
 
   void flutterToastError(String message) {
@@ -695,8 +927,6 @@ class DatabaseService {
       //throw Exception('Something went wrong: $e');
     }
   }
-
-
 
   // Clear user data from SharedPreferences
   void _clearUserData(SharedPreferencesService prefs) {

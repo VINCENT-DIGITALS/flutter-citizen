@@ -1,6 +1,6 @@
 import 'package:citizen/pages/announcement_page.dart';
 import 'package:citizen/pages/home_page.dart';
-
+import '../pages/friends/friends_circle_page.dart';
 import 'package:citizen/pages/weather_page.dart';
 import 'package:citizen/pages/map_page.dart';
 import 'package:citizen/pages/login_page.dart';
@@ -25,7 +25,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   void _onItemTapped(String page) {
     if (page == widget.currentPage) return;
-
+    // Only check authentication for the friends page
+    if (page == 'friends') {
+      if (!_dbService.isAuthenticated()) {
+        _dbService.redirectToLogin(context);
+        return;
+      }
+    }
     switch (page) {
       case 'home':
         Navigator.push(
@@ -34,10 +40,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
               builder: (context) => HomePage(currentPage: 'home')),
         );
         break;
-      case 'map':
+      case 'friends':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MapPage(currentPage: 'map')),
+          MaterialPageRoute(
+              builder: (context) =>
+                  const CircleHomePage(currentPage: 'friends')),
         );
         break;
       case 'settings':
@@ -95,8 +103,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
           label: 'Updates',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.map),
-          label: 'Map',
+          icon: Icon(Icons.people_alt_rounded),
+          label: 'friends',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings),
@@ -114,7 +122,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         return 1;
       case 'announcement':
         return 2;
-      case 'map':
+      case 'friends':
         return 3;
       case 'settings':
         return 4;
@@ -133,7 +141,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       case 2:
         return 'announcement';
       case 3:
-        return 'map';
+        return 'friends';
       case 4:
         return 'settings';
 

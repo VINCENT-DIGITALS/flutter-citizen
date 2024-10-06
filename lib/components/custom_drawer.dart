@@ -14,6 +14,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../pages/emergenacyGuides_page.dart';
+import '../pages/friends/friends_circle_page.dart';
+import '../pages/friends/friends_map.dart';
+import '../services/database_service.dart';
 
 class CustomDrawer extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -25,6 +28,7 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
+  final DatabaseService _dbService = DatabaseService();
   SharedPreferences? _prefs;
   Map<String, String> _userData = {};
 
@@ -225,8 +229,19 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 icon: Icons.people,
                 text: 'Friends/Circle',
                 iconColor: iconColor,
-                onTap: () {}),
-                
+                onTap: () {
+                  // Check if user is logged in
+                  if (_dbService.isAuthenticated()) {
+                    // If logged in, navigate to Friends/Circle page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CircleHomePage()),
+                    );
+                  } else {
+                    // If not logged in, redirect to login page
+                    _dbService.redirectToLogin(context);
+                  }
+                }),
             const Divider(color: Colors.grey),
 
             _buildSectionTitle("App"),
