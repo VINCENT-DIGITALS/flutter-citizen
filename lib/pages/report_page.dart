@@ -106,7 +106,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Failed to get current location: Access to location been denied'),
+              'Failed to get current location: enable it in app setting.'),
           backgroundColor: Colors.red,
         ),
       );

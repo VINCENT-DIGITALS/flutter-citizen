@@ -7,12 +7,22 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- NOTIFICATIONS  -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/> -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- <uses-permission android:name="android.permission.USE_EXACT_ALARM"/> -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- foregroundServiceType: dataSync -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- foregroundServiceType: remoteMessaging -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application
         android:label="BAYANi"
         android:name="android.app.Application"
@@ -40,6 +50,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- <meta-data  
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/default_notification_channel_id"  />      -->
          <!-- Foreground service declaration -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"

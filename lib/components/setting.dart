@@ -9,6 +9,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 import '../services/database_service.dart';
 import '../services/foreground_service.dart';
 import '../services/location_service.dart';
+import '../services/notificatoin_service.dart';
 import '../services/shared_pref.dart';
 
 class SettingsWidget extends StatefulWidget {
@@ -19,16 +20,18 @@ class SettingsWidget extends StatefulWidget {
 class _SettingsWidgetState extends State<SettingsWidget> {
   late FlutterLocalization _flutterLocalization;
   late String _currentLocale;
-  bool _isDarkMode = false;
-  bool _notificationsEnabled = true;
-  bool _locationBasedServicesEnabled = true;
-  bool _emergencyAlertsEnabled = true;
+  // bool _isDarkMode = false;
+  bool _isNotificationEnabled = false;
+  // bool _locationBasedServicesEnabled = true;
+  // bool _emergencyAlertsEnabled = true;
   bool _isLocationSharingEnabled = false; // Location sharing state
 
   final DatabaseService _dbService = DatabaseService();
   final MyForegroundService _foregroundService =
       MyForegroundService(); // Foreground service
   final LocationService _locationService = LocationService();
+  final NotificationService _notificationService =
+      NotificationService(); // Instantiate NotificationService
 
   @override
   void initState() {
@@ -37,28 +40,112 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     _currentLocale = 'en'; // Set a default value
     _loadLocale();
     _loadLocationSharingStateFromDB(); // Load the location sharing state from the database
+    _notificationService.initialize();
+    _loadNotificationPermissionStatus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadNotificationPermissionStatus();
+  }
+
+  // Check if notification permissions are granted and update the toggle accordingly
+  Future<void> _loadNotificationPermissionStatus() async {
+    bool hasPermission =
+        await NotificationService().hasNotificationPermission();
+    setState(() {
+      _isNotificationEnabled = hasPermission;
+    });
+  }
+
+// Handle toggle switch
+  Future<void> _toggleNotification(bool isEnabled) async {
+    if (isEnabled) {
+      // Request permission when enabling notifications
+      bool granted = await _notificationService.requestNotificationPermission();
+      setState(() {
+        _isNotificationEnabled = granted;
+      });
+      if (!granted) {
+        // Show an alert if permission is denied
+        _showPermissionDeniedDialog();
+      }
+    } else {
+      // When disabling notifications, show a confirmation dialog
+      _showDisableNotificationDialog();
+      setState(() {
+        _isNotificationEnabled = false;
+      });
+    }
+  }
+
+// Alert when permission is denied
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Permission Denied'),
+          content: Text(
+              'Notifications are disabled. Please enable them in the app settings.'),
+          actions: [
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Show a dialog when disabling notifications
+  void _showDisableNotificationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Disable Notifications'),
+          content: Text('To disbale it in app permissions.'),
+          actions: [
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
 // Load locale from SharedPreferences using SharedPreferencesService
-Future<void> _loadLocale() async {
-  SharedPreferencesService prefsService = await SharedPreferencesService.getInstance();
-  String? locale = prefsService.getData('locale') ?? 'en';  // Retrieve the locale
-  setState(() {
-    _currentLocale = locale!;
-  });
-  _flutterLocalization.translate(locale!);
-}
+  Future<void> _loadLocale() async {
+    SharedPreferencesService prefsService =
+        await SharedPreferencesService.getInstance();
+    String? locale =
+        prefsService.getData('locale') ?? 'en'; // Retrieve the locale
+    setState(() {
+      _currentLocale = locale!;
+    });
+    _flutterLocalization.translate(locale!);
+  }
 
 // Save locale using SharedPreferencesService
-Future<void> _setLocale(String? value) async {
-  if (value == null) return;
-  SharedPreferencesService prefsService = await SharedPreferencesService.getInstance();
-  prefsService.saveData('locale', value);  // Save the locale
-  setState(() {
-    _currentLocale = value;
-  });
-  _flutterLocalization.translate(value);
-}
+  Future<void> _setLocale(String? value) async {
+    if (value == null) return;
+    SharedPreferencesService prefsService =
+        await SharedPreferencesService.getInstance();
+    prefsService.saveData('locale', value); // Save the locale
+    setState(() {
+      _currentLocale = value;
+    });
+    _flutterLocalization.translate(value);
+  }
 
   // Load location sharing state from the database
   Future<void> _loadLocationSharingStateFromDB() async {
@@ -197,6 +284,34 @@ Future<void> _setLocale(String? value) async {
                   _setLocale(value);
                 },
               ),
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SwitchListTile(
+                  activeColor: Colors.orange,
+                  title: Row(
+                    children: [
+                      Icon(Icons.notifications, color: Colors.orange),
+                      SizedBox(
+                          width: constraints.maxWidth *
+                              0.02), // Responsive spacing
+                      Flexible(
+                        child: Text(
+                          'Enable Notifications',
+                          style: TextStyle(
+                            fontSize: MediaQuery.of(context).size.width *
+                                0.04, // Responsive text size
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  value: _isNotificationEnabled,
+                  onChanged: (bool value) {
+                    _toggleNotification(value);
+                  },
+                );
+              },
             ),
 
             // Show Location Sharing Toggle only if the user is authenticated

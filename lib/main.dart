@@ -1,3 +1,5 @@
+import 'package:citizen/api/firebase_api.dart';
+import 'package:citizen/services/notificatoin_service.dart';
 import 'package:citizen/services/userProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,15 +9,23 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'localization/locales.dart';
+import 'pages/announcement_page.dart';
 import 'services/auth_page.dart';
 import 'models/splash_screen.dart';
+
+final navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   await dotenv.load(fileName: '.env');
-  
+
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
+  // Initialize Notification Service for Android
+  await NotificationService().initialize();
+
+
+
   runApp(
-     const MyApp(),
+    const MyApp(),
   );
 }
 
@@ -46,7 +56,6 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     configureLocalization();
-    
   }
 
   @override
@@ -56,6 +65,9 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,
       home: const AuthPage(),
+      routes: {
+        '/notitication_screen' :(context) => const AnnouncementsPage(),
+      },
     );
   }
 

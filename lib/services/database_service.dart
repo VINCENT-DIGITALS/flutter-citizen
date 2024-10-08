@@ -12,12 +12,22 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/firebase_api.dart';
 import '../pages/login_page.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<void> saveFcmToken(String userId) async {
+    try {
+      final FirebaseApi firebaseApi = FirebaseApi();
+      await firebaseApi.initNotifications(userId);
+    } catch (e) {
+      print('Failed to save FCM token: $e');
+    }
+  }
 
   // Getter for the current user
   User? get currentUser {
@@ -820,6 +830,7 @@ class DatabaseService {
       }
 
       final userData = docSnapshot.docs.first.data();
+      final documentId = docSnapshot.docs.first.id;
       if (userData['status'] == 'Deactivated') {
         return 'User account is deactivated, contact the operator to activate';
       }
@@ -847,6 +858,9 @@ class DatabaseService {
         'type': userData['type'] ?? '',
         'status': userData['status'] ?? '',
       });
+
+      // Save FCM token
+      await saveFcmToken(documentId);
 
       return null;
     } catch (e) {
@@ -894,6 +908,8 @@ class DatabaseService {
         'type': userData['type'] ?? '',
         'status': userData['status'] ?? '',
       });
+      // Save FCM token
+      await saveFcmToken(documentId);
 
       return null; // Sign-in successful
     } on FirebaseAuthException catch (e) {

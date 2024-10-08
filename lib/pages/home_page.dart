@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'dart:async';
 
+import '../api/firebase_api.dart';
+import '../services/notificatoin_service.dart';
 import 'evacuationMap_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -44,6 +46,7 @@ class _HomePageState extends State<HomePage> {
   final LocationService _locationService = LocationService();
   double? _latitude;
   double? _longitude;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -51,6 +54,40 @@ class _HomePageState extends State<HomePage> {
     _initializePreferences();
     _fetchLocation();
     _fetchWeatherData();
+    // FirebaseApi().initNotifications();
+    // Initialize Notification Service for Android
+    _initializeNotifications();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeNotifications();
+    });
+  }
+
+  // Initialize the notification service
+  Future<void> _initializeNotifications() async {
+    try {
+      await _notificationService.initialize();  // This ensures permission request is handled
+      bool hasPermission =
+        await NotificationService().hasNotificationPermission();
+       if (hasPermission) {
+      // Request permission when enabling notifications
+      bool granted = await _notificationService.requestNotificationPermission();
+      if (!granted) {
+        // Show an alert if permission is denied
+           ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Notification not enabled, enable it in app setting.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      }
+    } else {
+      // When disabling notifications, show a confirmation dialog
+  
+    }
+    } catch (e) {
+   
+      print("Error initializing notifications: $e");
+    }
   }
 
   Future<void> _fetchWeatherData() async {
@@ -201,7 +238,6 @@ class _HomePageState extends State<HomePage> {
                     _buildEvacuationMapAndHotlineDir(),
                     SizedBox(height: 20),
                     _buildAnnouncements(),
-                   
                   ],
                 ),
               ),
@@ -593,5 +629,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }
