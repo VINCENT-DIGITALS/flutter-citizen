@@ -89,6 +89,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
         String page = _getPageFromIndex(index);
         _onItemTapped(page);
       },
+      selectedItemColor: Colors.orange, // Set your selected color here
+      unselectedItemColor: Colors.grey, // Set your unselected color here
+      showSelectedLabels: true, // Show label for selected item
+      showUnselectedLabels: true, // Show label for unselected items
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -107,7 +111,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
           label: 'friends',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
+          icon: Icon(
+            Icons.settings,
+          ),
           label: 'Setting',
         ),
       ],

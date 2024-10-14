@@ -361,6 +361,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       onPressed: () async {
                         try {
                           await _dbService.signOut();
+                           _foregroundService.stopForegroundService();
                           Navigator.of(context).pop();
                         } catch (e) {
                           print('Logout failed: $e');

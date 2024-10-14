@@ -1,16 +1,17 @@
-import 'package:citizen/api/firebase_api.dart';
+
+import 'package:citizen/services/auth_page.dart';
 import 'package:citizen/services/notificatoin_service.dart';
-import 'package:citizen/services/userProvider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localization/flutter_localization.dart';
-import 'package:provider/provider.dart';
+
 import 'firebase_options.dart';
 import 'localization/locales.dart';
 import 'pages/announcement_page.dart';
-import 'services/auth_page.dart';
+
 import 'models/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -64,10 +65,8 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,
-      home: const AuthPage(),
-      routes: {
-        '/notitication_screen' :(context) => const AnnouncementsPage(),
-      },
+      home: const SplashScreen(),
+ 
     );
   }
 

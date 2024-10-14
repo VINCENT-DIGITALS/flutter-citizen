@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../components/bottom_bar.dart';
 import '../../components/custom_drawer.dart';
-import 'report_detail_page.dart'; // For accessing the logged-in user
+import 'report_detail_page.dart'; // For accessing the report detail page
 
 class ReportsSummaryPage extends StatefulWidget {
   final String currentPage;
@@ -21,56 +21,32 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // List of reports
-  List<Map<String, dynamic>> userReports = [];
-  bool isLoading = true;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _reportsStream;
 
   @override
   void initState() {
     super.initState();
-    _loadUserReports(); // Load user reports on page initialization
+    _initReportsStream();
   }
 
-  // Fetch reports submitted by the logged-in user
-  Future<void> _loadUserReports() async {
-    try {
-      User? user = _auth.currentUser; // Get the current logged-in user
-      if (user == null) {
-        // If no user is logged in, return
-        return;
-      }
+  void _initReportsStream() {
+    final user = _auth.currentUser;
 
-      // Query Firestore for reports submitted by the user
-      QuerySnapshot querySnapshot = await _firestore
+    if (user != null) {
+      _reportsStream = _firestore
           .collection('reports')
           .where('reporterId', isEqualTo: user.uid)
-          .get();
-
-      setState(() {
-        userReports = querySnapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      // Handle any errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load reports: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+          .orderBy('timestamp', descending: true) // Order by timestamp in descending order
+          .snapshots();
     }
   }
 
-  // Convert Firestore Timestamp to formatted DateTime string
+
+
   String _formatTimestamp(Timestamp? timestamp) {
-    if (timestamp == null) {
-      return 'N/A'; // Return 'N/A' if timestamp is null
-    }
-    DateTime dateTime = timestamp.toDate();
-    return DateFormat('MMMM d, y h:mm a')
-        .format(dateTime); // Format the DateTime
+    if (timestamp == null) return 'N/A';
+    final dateTime = timestamp.toDate();
+    return DateFormat('MMMM d, y h:mm a').format(dateTime);
   }
 
   @override
@@ -81,53 +57,111 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
         title: const Text('My Incident Reports'),
       ),
       drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : userReports.isEmpty
-              ? const Center(child: Text('No reports submitted yet.'))
-              : ListView.builder(
+      body: _reportsStream == null
+          ? const Center(child: Text('Please log in to view your reports.'))
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _reportsStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading reports.'));
+                }
+
+                final userReports = snapshot.data?.docs
+                        .map((doc) => doc.data())
+                        .toList() ??
+                    [];
+
+                if (userReports.isEmpty) {
+                  return const Center(
+                      child: Text('No reports submitted yet.'));
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
                   itemCount: userReports.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final report = userReports[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          'Incident Type: ${report['incidentType'] ?? 'N/A'}',
-                          style: Theme.of(context).textTheme.subtitle1,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                'Date & Time: ${_formatTimestamp(report['timestamp'])}'),
-                            Text('Location: ${report['address'] ?? 'N/A'}'),
-                            Text('Landmark: ${report['landmark'] ?? 'N/A'}'),
-                            Text('Severity: ${report['seriousness'] ?? 'N/A'}'),
-                          ],
-                        ),
-                        trailing: const Icon(Icons.arrow_forward),
-                        onTap: () {
-                          // Navigate to detailed report page when the item is tapped
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ReportDetailPage(report: report),
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    report['id'] = snapshot.data?.docs[index].id; // Assign the document ID.
+                    return _buildReportCard(report);
                   },
-                ),
+                );
+              },
+            ),
       bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
+  }
+
+  Widget _buildReportCard(Map<String, dynamic> report) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        title: Text(
+          'Incident Type: ${report['incidentType'] ?? 'N/A'}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailText('Date & Time', _formatTimestamp(report['timestamp'])),
+            _buildDetailText('Location', report['address'] ?? 'N/A'),
+            _buildDetailText('Landmark', report['landmark'] ?? 'N/A'),
+            _buildDetailText('Severity', report['seriousness'] ?? 'N/A'),
+            _buildStatusText(report['status']),
+          ],
+        ),
+        trailing: const Icon(Icons.arrow_forward),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReportDetailPage(reportId: report['id']),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDetailText(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Text('$label: $value'),
+    );
+  }
+
+  Widget _buildStatusText(String? status) {
+    final statusColor = _getStatusColor(status ?? 'Pending');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Text(
+        'Status: ${status ?? 'Pending'}',
+        style: TextStyle(
+          color: statusColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
   }
 }

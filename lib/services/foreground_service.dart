@@ -10,7 +10,14 @@ import 'locationHandler.dart';
 import 'location_service.dart'; // Import your LocationService
 
 class MyForegroundService {
-  final DatabaseService _dbService = DatabaseService();
+  late DatabaseService _dbService;
+
+  MyForegroundService(); // Constructor
+
+  void initialize(DatabaseService dbService) {
+    _dbService = dbService;
+  }
+
   final LocationService _locationService =
       LocationService(); // Instance of LocationService
   Timer? _locationUpdateTimer; // Timer for periodic updates

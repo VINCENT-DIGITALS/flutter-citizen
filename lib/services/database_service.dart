@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/firebase_api.dart';
 import '../pages/login_page.dart';
+import 'foreground_service.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -214,6 +215,7 @@ class DatabaseService {
 
   // Sign out
   Future<void> signOut() async {
+   
     await _auth.signOut();
     await GoogleSignIn().signOut();
     SharedPreferencesService prefs =
