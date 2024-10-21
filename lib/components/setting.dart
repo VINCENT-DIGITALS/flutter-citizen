@@ -13,6 +13,9 @@ import '../services/notificatoin_service.dart';
 import '../services/shared_pref.dart';
 
 class SettingsWidget extends StatefulWidget {
+  final String currentPage;
+
+  const SettingsWidget({super.key, this.currentPage = 'settings'});
   @override
   _SettingsWidgetState createState() => _SettingsWidgetState();
 }
@@ -206,6 +209,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     } else {
       // Stop the foreground service and update location sharing to false
       await _foregroundService.stopForegroundService();
+
+      // Ensure Firestore is updated to indicate location sharing is off
+      await _dbService.updateLocationSharing(
+        location: GeoPoint(
+            0, 0), // Optional: you can pass the last known or dummy location
+        locationSharing: false, // Set locationSharing to false here
+      );
     }
   }
 
@@ -285,36 +295,36 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 },
               ),
             ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return SwitchListTile(
-                  activeColor: Colors.orange,
-                  title: Row(
-                    children: [
-                      Icon(Icons.notifications, color: Colors.orange),
-                      SizedBox(
-                          width: constraints.maxWidth *
-                              0.02), // Responsive spacing
-                      Flexible(
-                        child: Text(
-                          'Enable Notifications',
-                          style: TextStyle(
-                            fontSize: MediaQuery.of(context).size.width *
-                                0.04, // Responsive text size
+            if (_dbService
+                .isAuthenticated()) // Check if the user is authenticated
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return SwitchListTile(
+                    activeColor: Colors.orange,
+                    title: Row(
+                      children: [
+                        Icon(Icons.notifications, color: Colors.orange),
+                        SizedBox(
+                            width: constraints.maxWidth *
+                                0.02), // Responsive spacing
+                        Flexible(
+                          child: Text(
+                            'Enable Notifications',
+                            style: TextStyle(
+                              fontSize: MediaQuery.of(context).size.width *
+                                  0.04, // Responsive text size
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  value: _isNotificationEnabled,
-                  onChanged: (bool value) {
-                    _toggleNotification(value);
-                  },
-                );
-              },
-            ),
-
-            // Show Location Sharing Toggle only if the user is authenticated
+                      ],
+                    ),
+                    value: _isNotificationEnabled,
+                    onChanged: (bool value) {
+                      _toggleNotification(value);
+                    },
+                  );
+                },
+              ),
             if (_dbService
                 .isAuthenticated()) // Check if the user is authenticated
               LayoutBuilder(
@@ -361,7 +371,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       onPressed: () async {
                         try {
                           await _dbService.signOut();
-                           _foregroundService.stopForegroundService();
+                          _foregroundService.stopForegroundService();
                           Navigator.of(context).pop();
                         } catch (e) {
                           print('Logout failed: $e');

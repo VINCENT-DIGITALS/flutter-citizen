@@ -50,6 +50,8 @@ class FirebaseApi {
     // Update the token field (use a specific field like 'fcmToken' for consistency)
     await userRef.set({
       'fcmToken': token,
+      'lastUpdated': FieldValue
+                .serverTimestamp(), // Update the last updated timestamp
     }, SetOptions(merge: true));
     print("FCM Token saved to Firestore: $token");
   }

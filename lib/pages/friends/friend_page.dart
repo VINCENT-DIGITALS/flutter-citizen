@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart'; // Add this package to pubspec.yaml
+import '../../components/bottom_bar.dart';
 import '../../services/database_service.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
+  final String currentPage;
+
+  const FriendRequestsScreen({super.key, this.currentPage = 'friends'});
   @override
   State<FriendRequestsScreen> createState() => _FriendRequestsScreenState();
 }
@@ -44,21 +48,29 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
               String friendId = pendingRequests[index];
 
               return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('citizens').doc(friendId).get(),
+                future: FirebaseFirestore.instance
+                    .collection('citizens')
+                    .doc(friendId)
+                    .get(),
                 builder: (context, friendSnapshot) {
-                  if (friendSnapshot.connectionState == ConnectionState.waiting) {
+                  if (friendSnapshot.connectionState ==
+                      ConnectionState.waiting) {
                     return _buildShimmerLoadingTile();
                   }
 
                   if (friendSnapshot.hasError) {
-                    return ListTile(title: Text("Error loading friend details"));
+                    return ListTile(
+                        title: Text("Error loading friend details"));
                   }
 
-                  if (!friendSnapshot.hasData || friendSnapshot.data?.data() == null) {
+                  if (!friendSnapshot.hasData ||
+                      friendSnapshot.data?.data() == null) {
                     return ListTile(title: Text("Friend data not found"));
                   }
 
-                  var friendData = friendSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+                  var friendData =
+                      friendSnapshot.data!.data() as Map<String, dynamic>? ??
+                          {};
                   String friendName = friendData['displayName'] ?? 'Unknown';
 
                   return ListTile(
@@ -70,11 +82,13 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                             children: [
                               IconButton(
                                 icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () => _handleFriendRequest(friendId, true),
+                                onPressed: () =>
+                                    _handleFriendRequest(friendId, true),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () => _handleFriendRequest(friendId, false),
+                                icon: Icon(Icons.close, color: const Color.fromARGB(255, 108, 244, 54)),
+                                onPressed: () =>
+                                    _handleFriendRequest(friendId, false),
                               ),
                             ],
                           ),
@@ -85,6 +99,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           );
         },
       ),
+      bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
   }
 

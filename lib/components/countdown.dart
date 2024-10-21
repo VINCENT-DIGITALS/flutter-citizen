@@ -1,8 +1,15 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:vibration/vibration.dart';
+
+import '../services/database_service.dart';
 
 class SosCountdownDialog extends StatefulWidget {
+  final double latitude;
+  final double longitude;
+
+  SosCountdownDialog({required this.latitude, required this.longitude});
+
   @override
   _SosCountdownDialogState createState() => _SosCountdownDialogState();
 }
@@ -11,11 +18,11 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
   int countdown = 10;
   Timer? timer;
   bool canVibrate = false;
+  final DatabaseService _dbService = DatabaseService();
 
   @override
   void initState() {
     super.initState();
-    checkVibrationSupport();
     startCountdown();
   }
 
@@ -25,13 +32,6 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
     super.dispose();
   }
 
-  // Check if the device supports vibration
-  Future<void> checkVibrationSupport() async {
-    bool? hasVibrator = await Vibration.hasVibrator();
-    setState(() {
-      canVibrate = hasVibrator ?? false;
-    });
-  }
 
   void startCountdown() {
     timer = Timer.periodic(Duration(seconds: 1), (Timer timer) async {
@@ -39,10 +39,6 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
         timer.cancel();
         handleSOS(); // Trigger SOS functionality here
       } else {
-        // Trigger vibration at each second if supported
-        if (canVibrate) {
-          await Vibration.vibrate(duration: 300); // Vibrate for 300 milliseconds
-        }
 
         setState(() {
           countdown--;
@@ -51,42 +47,71 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
     });
   }
 
-  void handleSOS() {
-    // ADD FUNCTION TO INFORM FRIENDS HERE
+  void handleSOS() async {
+    try {
+      GeoPoint location = GeoPoint(widget.latitude, widget.longitude);
 
-    Navigator.of(context).pop(); // Close the countdown dialog
-    // Show the SOS triggered dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent automatic dismissal
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            "SOS Triggered!",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          content: Text(
-            "Your SOS has been sent. Please wait for help or take necessary actions.",
-            textAlign: TextAlign.center,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text(
-                "Close",
-                style: TextStyle(fontWeight: FontWeight.bold),
+   
+
+      // Get the user ID from the current user in the database service
+      String? userId = _dbService.currentUser?.uid;
+
+      if (userId != null) {
+        // Add the SOS data to the user's Firestore document
+        await _dbService.addSosToUser(userId, location);
+
+        // Show success message
+        Navigator.of(context).pop(); // Close the countdown dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(
+                "SOS Triggered!",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
-            ),
-          ],
+              content: Text(
+                "Your SOS with location has been sent. Please wait for help or take necessary actions.",
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: Text(
+                    "Close",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
         );
-      },
-    );
-    print("SOS triggered!");
+        print(
+            "SOS triggered with location: ${widget.latitude}, ${widget.longitude}");
+      } else {
+        print("Error: User is not authenticated.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error: Unable to retrieve user information.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error sending SOS: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to send SOS. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void cancelSOS() {
@@ -134,7 +159,7 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
                       "${value.ceil()}",
                       key: ValueKey<int>(value.ceil()),
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.red,
                       ),

@@ -30,6 +30,33 @@ class DatabaseService {
     }
   }
 
+// Add SOS data to the current user's Firestore document
+  Future<void> addSosToUser(String userId, GeoPoint location) async {
+    try {
+      // Reference to the current user's document in the 'citizens' collection
+      final userDocRef = _db.collection('citizens').doc(userId);
+
+      // Generate a client-side timestamp using DateTime.now()
+      final timestamp = DateTime.now();
+
+      // Prepare the SOS data with the same client-side timestamp
+      final sosData = {
+        'location': location,
+        'createdAt': timestamp, // Client-side timestamp used here
+      };
+
+      // Use set() with merge: true and arrayUnion to append SOS data
+      await userDocRef.set({
+        'sos': FieldValue.arrayUnion([sosData])
+      }, SetOptions(merge: true));
+
+      print("SOS data added to user document with client-side timestamp.");
+    } catch (e) {
+      print("Error adding SOS data: $e");
+      throw e;
+    }
+  }
+
   // Getter for the current user
   User? get currentUser {
     return _auth.currentUser;
@@ -150,6 +177,10 @@ class DatabaseService {
     }
   }
 
+  Future<DocumentSnapshot> getUserDoc(String uid) async {
+    return await _db.collection('citizens').doc(uid).get();
+  }
+
   Future<void> addReport({
     required String address,
     required String landmark,
@@ -174,6 +205,7 @@ class DatabaseService {
         'responderTeam': null,
         'timestamp': FieldValue.serverTimestamp(),
         'location': location, // Store as GeoPoint
+        'status': 'pending',
       };
 
       await _db.collection('reports').add(reportData);
@@ -215,7 +247,6 @@ class DatabaseService {
 
   // Sign out
   Future<void> signOut() async {
-   
     await _auth.signOut();
     await GoogleSignIn().signOut();
     SharedPreferencesService prefs =

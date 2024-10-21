@@ -65,27 +65,28 @@ class _HomePageState extends State<HomePage> {
   // Initialize the notification service
   Future<void> _initializeNotifications() async {
     try {
-      await _notificationService.initialize();  // This ensures permission request is handled
+      await _notificationService
+          .initialize(); // This ensures permission request is handled
       bool hasPermission =
-        await NotificationService().hasNotificationPermission();
-       if (hasPermission) {
-      // Request permission when enabling notifications
-      bool granted = await _notificationService.requestNotificationPermission();
-      if (!granted) {
-        // Show an alert if permission is denied
-           ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notification not enabled, enable it in app setting.'),
-          backgroundColor: Colors.green,
-        ),
-      );
+          await NotificationService().hasNotificationPermission();
+      if (hasPermission) {
+        // Request permission when enabling notifications
+        bool granted =
+            await _notificationService.requestNotificationPermission();
+        if (!granted) {
+          // Show an alert if permission is denied
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Notification not enabled, enable it in app setting.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // When disabling notifications, show a confirmation dialog
       }
-    } else {
-      // When disabling notifications, show a confirmation dialog
-  
-    }
     } catch (e) {
-   
       print("Error initializing notifications: $e");
     }
   }
@@ -161,25 +162,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void startCountdown() {
-    int countdown = 10; // 10-second countdown
-    Timer.periodic(Duration(seconds: 1), (Timer timer) {
-      if (countdown == 0) {
-        timer.cancel();
-        // Call your function here after countdown ends
-        handleSOS();
-      } else {
-        countdown--;
-        print("Countdown: $countdown"); // You can update UI with countdown
-      }
-    });
-  }
-
-  void handleSOS() {
-    // TODO: Add the SOS feature implementation here
-    print("SOS feature triggered");
-  }
-
+ 
   @override
   Widget build(BuildContext context) {
     String formattedDateTime = DateFormat('MMMM d, h:mm a', 'en_PH').format(
@@ -380,19 +363,32 @@ class _HomePageState extends State<HomePage> {
         SizedBox(width: 10),
         Expanded(
           child: GestureDetector(
-            onTap: () {
-              if (_dbService.isAuthenticated()) {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return SosCountdownDialog();
-                  },
-                );
-              } else {
-                _dbService.redirectToLogin(context);
-              }
-            },
+  onTap: () {
+    if (_dbService.isAuthenticated()) {
+      if (_latitude != null && _longitude != null) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return SosCountdownDialog(
+              latitude: _latitude!, // Pass latitude
+              longitude: _longitude!, // Pass longitude
+            );
+          },
+        );
+      } else {
+        // Show a message if location is not available
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to retrieve your location. Try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      _dbService.redirectToLogin(context);
+    }
+  },
             child: Container(
               padding: EdgeInsets.all(16.0),
               decoration: BoxDecoration(

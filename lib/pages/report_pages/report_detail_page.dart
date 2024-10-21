@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../components/bottom_bar.dart';
 import '../../components/custom_drawer.dart';
+import '../map/report_map.dart';
 
 class ReportDetailPage extends StatefulWidget {
   final String reportId;
@@ -48,7 +49,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       appBar: AppBar(
         title: const Text('My Incident Reports'),
       ),
-      drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
+      
       body: StreamBuilder<DocumentSnapshot>(
         stream:
             _firestore.collection('reports').doc(widget.reportId).snapshots(),
@@ -83,8 +84,8 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                       reportData['injuredCount']?.toString() ?? 'N/A'),
                   _buildDetailRow(
                       Icons.warning, 'Severity', reportData['seriousness']),
-                      _buildDetailRow(
-                      Icons.description_outlined, 'Description', reportData['description']),
+                  _buildDetailRow(Icons.description_outlined, 'Description',
+                      reportData['description']),
                 ]),
                 const SizedBox(height: 16),
                 _buildSectionHeader('Location Details'),
@@ -117,7 +118,10 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                         });
                       },
                       icon: const Icon(Icons.play_circle, color: Colors.white),
-                      label: const Text('Open Media', style: TextStyle(color: Colors.white),),
+                      label: const Text(
+                        'Open Media',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
@@ -132,12 +136,32 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                 Center(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      setState(() {
-                        _isMapExpanded = !_isMapExpanded;
-                      });
+                      // Check if the location is a GeoPoint, then convert to LatLng
+                      if (reportData['location'] is GeoPoint) {
+                        GeoPoint geoPoint = reportData['location'];
+                        LatLng location =
+                            LatLng(geoPoint.latitude, geoPoint.longitude);
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReportMapPage(
+                              locationName: reportData['address'],
+                              resportCoords: location, // Pass the LatLng object
+                              responderId:
+                                  reportData['responderId'], // May be null
+                              reportStatus: reportData['status'], // May be null
+                            ),
+                          ),
+                        );
+                      } else {
+                        // Handle error if location is not a GeoPoint (optional)
+                        print('Location is not a GeoPoint');
+                      }
                     },
                     icon: const Icon(Icons.map, color: Colors.white),
-                    label: const Text('Toggle Map', style: TextStyle(color: Colors.white),),
+                    label: const Text('Toggle Map',
+                        style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       shape: RoundedRectangleBorder(
@@ -145,18 +169,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                       ),
                     ),
                   ),
-                ),
-                if (_isMapExpanded && reportLocation != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: SizedBox(
-                        height: 300,
-                        child: _buildMapWidget(),
-                      ),
-                    ),
-                  ),
+                )
               ],
             ),
           );
@@ -214,22 +227,6 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMapWidget() {
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: reportLocation ?? LatLng(15.7140846, 120.9001115),
-        initialZoom: 16.0,
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.app',
-        ),
-      ],
     );
   }
 

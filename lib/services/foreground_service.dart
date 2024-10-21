@@ -10,32 +10,56 @@ import 'locationHandler.dart';
 import 'location_service.dart'; // Import your LocationService
 
 class MyForegroundService {
-  late DatabaseService _dbService;
+  late final DatabaseService _dbService;
+  Timer? _locationUpdateTimer; // Timer for periodic updates
+  Timer? _autoStopTimer; // Timer to stop the service after 30 minutes
 
-  MyForegroundService(); // Constructor
-
-  void initialize(DatabaseService dbService) {
-    _dbService = dbService;
+  MyForegroundService() {
+    _dbService = DatabaseService(); // Initialize the service here
   }
 
   final LocationService _locationService =
       LocationService(); // Instance of LocationService
-  Timer? _locationUpdateTimer; // Timer for periodic updates
-  // Start the foreground service with periodic location updates
+
   // Start the foreground service with periodic location updates
   Future<void> startForegroundService() async {
     if (_dbService.isAuthenticated()) {
-      // Start the foreground service with the correct parameters
+      // Stop any existing timer before starting a new one
+      if (_locationUpdateTimer != null && _locationUpdateTimer!.isActive) {
+        print(
+            'Stopping existing location update timer before starting a new one.');
+        _locationUpdateTimer!.cancel();
+      }
+
+      if (_autoStopTimer != null && _autoStopTimer!.isActive) {
+        print('Stopping existing auto-stop timer before starting a new one.');
+        _autoStopTimer!.cancel();
+      }
+
+      // Start the foreground service
       await FlutterForegroundTask.startService(
         notificationTitle: 'Location Service Running',
         notificationText: 'We are tracking your location in the background',
         callback: updateLocationInBackground, // This is required
       );
+
       // Start the periodic location updates with a timer
-      const updateInterval = Duration(minutes: 1); // Set your desired interval
+      const updateInterval = Duration(minutes: 1); // Set desired interval
       _locationUpdateTimer = Timer.periodic(updateInterval, (timer) async {
-        updateLocationInBackground();
+        print('Timer triggered, updating location at ${DateTime.now()}');
+        updateLocationInBackground(); // This is where location updates happen
       });
+
+      // Start an auto-stop timer that will stop the service after 30 minutes
+      const autoStopInterval = Duration(minutes: 30);
+      _autoStopTimer = Timer(autoStopInterval, () async {
+        print('Auto-stop timer triggered, stopping the foreground service.');
+        await stopForegroundService(); // Automatically stop the service after 30 minutes
+      });
+
+      print(
+          'Foreground service started with location updates every $updateInterval.');
+      print('Service will automatically stop after $autoStopInterval.');
     } else {
       throw Exception("User not authenticated, cannot start location service");
     }
@@ -43,26 +67,28 @@ class MyForegroundService {
 
   // Stop the foreground service and update location sharing to false
   Future<void> stopForegroundService() async {
-    // Check if the user is authenticated before stopping the service
     if (_dbService.isAuthenticated()) {
+      // Stop the foreground service
       await FlutterForegroundTask.stopService();
 
-      // Cancel the timer to stop periodic updates
+      // Cancel the timers
       _locationUpdateTimer?.cancel();
-      _locationUpdateTimer = null; // Clear the reference to prevent reuse
+      _locationUpdateTimer = null;
+      _autoStopTimer?.cancel();
+      _autoStopTimer = null;
 
-      // Optionally, update Firestore to indicate that location sharing is turned off
+      // Update Firestore to indicate that location sharing is turned off
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        GeoPoint dummyLocation =
-            GeoPoint(0, 0); // Optional last known or dummy location
+        GeoPoint dummyLocation = GeoPoint(0, 0);
         await _dbService.updateLocationSharing(
           location: dummyLocation,
-          locationSharing: false, // Disable location sharing
+          locationSharing: false,
         );
       }
     } else {
-      throw Exception("User not authenticated, cannot stop location service");
+      print("User not authenticated, skipping stop of location service.");
+      return;
     }
   }
 
@@ -78,11 +104,18 @@ class MyForegroundService {
 
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          // Call the updateLocationSharing method from the DatabaseService
-          await _dbService.updateLocationSharing(
-            location: location,
-            locationSharing: true, // Indicate that location sharing is enabled
-          );
+          // Get the current locationSharing status from Firestore
+          DocumentSnapshot userDoc = await _dbService.getUserDoc(user.uid);
+          bool isLocationSharing = userDoc['locationSharing'] ?? false;
+
+          // Only update Firestore if location sharing is still enabled
+          if (isLocationSharing) {
+            await _dbService.updateLocationSharing(
+              location: location,
+              locationSharing:
+                  true, // Indicate that location sharing is enabled
+            );
+          }
         }
       }
     } catch (e) {

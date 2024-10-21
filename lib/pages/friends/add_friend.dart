@@ -1,8 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../components/bottom_bar.dart';
 import '../../services/database_service.dart';
 
 class AddFriendsScreen extends StatefulWidget {
+  final String currentPage;
+
+  const AddFriendsScreen({super.key, this.currentPage = 'friends'});
   @override
   _AddFriendsScreenState createState() => _AddFriendsScreenState();
 }
@@ -27,16 +31,16 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
     setState(() {
       isLoading[friendId] = true; // Set loading state to true
     });
-    
+
     try {
       await _dbService.sendFriendRequest(friendId);
-      
+
       // Update UI with success message
       setState(() {
         isLoading[friendId] = false;
         isSuccess[friendId] = true;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Friend request sent successfully!')),
       );
@@ -45,7 +49,7 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
         isLoading[friendId] = false;
         isSuccess[friendId] = false;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Friend request failed!')),
       );
@@ -82,7 +86,11 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add Friends")),
+      appBar: AppBar(
+        title: Text(
+          'Add Friends',
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -115,10 +123,12 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
                   trailing: isUserLoading
                       ? CircularProgressIndicator() // Show loading indicator
                       : isRequestSent
-                          ? Icon(Icons.check, color: Colors.green) // Success indicator
+                          ? Icon(Icons.check,
+                              color: Colors.green) // Success indicator
                           : IconButton(
                               icon: Icon(Icons.person_add),
-                              onPressed: () => confirmFriendRequest(userId), // Confirmation dialog
+                              onPressed: () => confirmFriendRequest(
+                                  userId), // Confirmation dialog
                             ),
                 );
               },
@@ -126,6 +136,7 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
   }
 }

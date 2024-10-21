@@ -1,4 +1,3 @@
-
 import 'package:citizen/services/auth_page.dart';
 import 'package:citizen/services/notificatoin_service.dart';
 
@@ -7,7 +6,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localization/flutter_localization.dart';
-
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'dart:io';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'firebase_options.dart';
 import 'localization/locales.dart';
 import 'pages/announcement_page.dart';
@@ -15,6 +17,7 @@ import 'pages/announcement_page.dart';
 import 'models/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   await dotenv.load(fileName: '.env');
 
@@ -23,7 +26,24 @@ void main() async {
   // Initialize Notification Service for Android
   await NotificationService().initialize();
 
+  await FMTCObjectBoxBackend().initialise();
 
+  final mgmt = FMTCStore('mapCache').manage;
+
+  bool storeExists = await mgmt.ready;
+  if (storeExists) {
+    print('Store exists and is ready for use.');
+
+    final stats = FMTCStore('mapCache').stats;
+    final allStats = await stats.all;
+    print(allStats);
+
+    final realSize = await FMTCRoot.stats.realSize;
+    print('storesAvailable: $realSize');
+  } else {
+    print('Store does not exist. Creating it now...');
+    await mgmt.create();
+  }
 
   runApp(
     const MyApp(),
@@ -66,7 +86,6 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,
       home: const SplashScreen(),
- 
     );
   }
 

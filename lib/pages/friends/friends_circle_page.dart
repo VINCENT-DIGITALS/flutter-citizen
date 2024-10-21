@@ -8,7 +8,7 @@ import 'friends_map.dart';
 import 'manage_friends_page.dart';
 
 class CircleHomePage extends StatefulWidget {
-    final String currentPage;
+  final String currentPage;
 
   const CircleHomePage({super.key, this.currentPage = 'friends'});
 
@@ -18,12 +18,15 @@ class CircleHomePage extends StatefulWidget {
 
 class _CircleHomePageState extends State<CircleHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
-        title: Text('Friend Circle Home'),
+        title: const Text(
+          'Friend/Cricle',
+        ),
       ),
       drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
       body: LayoutBuilder(
@@ -39,11 +42,13 @@ class _CircleHomePageState extends State<CircleHomePage> {
                     icon: Icons.person_add_alt_1,
                     title: 'Add Friends',
                     description: 'Search and send friend requests',
+                    color: Colors.blueAccent,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => AddFriendsScreen()),
+                          builder: (context) => AddFriendsScreen(),
+                        ),
                       );
                     },
                   ),
@@ -53,11 +58,13 @@ class _CircleHomePageState extends State<CircleHomePage> {
                     icon: Icons.map,
                     title: 'View on Map',
                     description: 'See friends\' locations on the map',
+                    color: Colors.greenAccent,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => FriendsMapScreen()),
+                          builder: (context) => FriendsMapScreen(),
+                        ),
                       );
                     },
                   ),
@@ -67,11 +74,13 @@ class _CircleHomePageState extends State<CircleHomePage> {
                     icon: Icons.notifications,
                     title: 'Friend Requests',
                     description: 'View and manage friend requests',
+                    color: Colors.orangeAccent,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => FriendRequestsScreen()),
+                          builder: (context) => FriendRequestsScreen(),
+                        ),
                       );
                     },
                   ),
@@ -81,11 +90,13 @@ class _CircleHomePageState extends State<CircleHomePage> {
                     icon: Icons.group,
                     title: 'List of Friends',
                     description: 'View and manage friends',
+                    color: Colors.purpleAccent,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ManageFriendsScreen()), // Updated to ManageFriendsScreen
+                          builder: (context) => ManageFriendsScreen(),
+                        ),
                       );
                     },
                   ),
@@ -95,7 +106,7 @@ class _CircleHomePageState extends State<CircleHomePage> {
           );
         },
       ),
-       bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
+      bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
   }
 }
@@ -104,12 +115,14 @@ class FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
+  final Color color; // Custom color for each icon
   final Function onTap;
 
   const FeatureCard({
     required this.icon,
     required this.title,
     required this.description,
+    required this.color, // New color parameter
     required this.onTap,
   });
 
@@ -118,25 +131,57 @@ class FeatureCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap(),
       child: Card(
-        elevation: 4,
-        margin: EdgeInsets.symmetric(vertical: 10),
+        elevation: 6,
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15), // Rounded corners for modern look
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              Icon(icon, size: 40, color: Colors.blueAccent),
-              SizedBox(width: 16),
+              // Colored Icon
+              CircleAvatar(
+                backgroundColor: color.withOpacity(0.1),
+                radius: 30,
+                child: Icon(
+                  icon,
+                  size: 32,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Title and Description
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 4),
-                    Text(description, style: TextStyle(color: Colors.grey[600])),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.grey),
+
+              // Arrow Icon
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey[400],
+              ),
             ],
           ),
         ),
