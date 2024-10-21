@@ -51,7 +51,7 @@ class _FriendMapPageState extends State<FriendMapPage> {
   final PopupController _popupController =
       PopupController(); // Add PopupController to manage popups
   LatLng? _friendLocation; // Variable to store the fetched friend's location
-
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -162,36 +162,76 @@ class _FriendMapPageState extends State<FriendMapPage> {
   }
 
   //Function to use the openrouteservice
-  void getCoordinates() async {
-    var connectivityResult = await Connectivity().checkConnectivity();
+  getCoordinates() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    var connectivityResult = await (Connectivity().checkConnectivity());
 
     if (connectivityResult == ConnectivityResult.none) {
+      // No internet connection
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Internet connection required for routing!'),
           duration: Duration(seconds: 3),
         ),
       );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     if (_currentLocation != null && _friendLocation != null) {
+      // Convert current location and evacuation coordinates to string format
       String startPoint = latLngToString(_currentLocation!);
       String endPoint = latLngToString(_friendLocation!);
 
-      var response = await http.get(getRouteUrl(startPoint, endPoint));
+      try {
+        var response = await http.get(getRouteUrl(startPoint, endPoint));
 
-      setState(() {
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          listOfPoints = data['features'][0]['geometry']['coordinates'];
-          points = listOfPoints
-              .map((p) => LatLng(p[1].toDouble(), p[0].toDouble()))
-              .toList();
-        }
-      });
+        setState(() {
+          if (response.statusCode == 200) {
+            var data = jsonDecode(response.body);
+            listOfPoints = data['features'][0]['geometry']['coordinates'];
+            points = listOfPoints
+                .map((p) => LatLng(p[1].toDouble(), p[0].toDouble()))
+                .toList();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Failed to retrieve routing data: ${response.statusCode}'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+            print('Error: ${response.reasonPhrase}');
+          }
+          _isLoading = false; // Stop loading after the response is processed
+        });
+      } catch (e) {
+        setState(() {
+          _isLoading = false; // Stop loading if there's an exception
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error occurred while getting route: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('Exception caught: $e');
+      }
     } else {
-      print('Current or friend location is not available.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Current location not available!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -289,135 +329,145 @@ class _FriendMapPageState extends State<FriendMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Friends Map'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed:
-                  _showDeleteConfirmationDialog, // Show confirmation dialog on delete button click
-            ),
-          ],
-        ),
-        body: _currentLocation == null
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : Stack(
-                children: [
-                  FlutterMap(
-                    mapController: mapController,
-                    options: MapOptions(
-                      initialCenter:
-                          _currentLocation!, // Center on evacuation location initially
-                      initialZoom: 15,
-                      maxZoom: 20,
-                      minZoom: 13,
+      appBar: AppBar(
+        title: Text('Friends Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed:
+                _showDeleteConfirmationDialog, // Show confirmation dialog on delete button click
+          ),
+        ],
+      ),
+      body: _currentLocation == null
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Stack(
+              children: [
+                FlutterMap(
+                  mapController: mapController,
+                  options: MapOptions(
+                    initialCenter:
+                        _currentLocation!, // Center on evacuation location initially
+                    initialZoom: 15,
+                    maxZoom: 20,
+                    minZoom: 13,
 
-                      onTap: (_, __) => _popupController
-                          .hideAllPopups(), // Hide popup on map tap
+                    onTap: (_, __) => _popupController
+                        .hideAllPopups(), // Hide popup on map tap
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.app',
+                      tileProvider: tileProvider,
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.app',
-                        tileProvider: tileProvider,
-                      ),
-                      MarkerLayer(
-                        markers: getMarkers(), // Use dynamic markers
-                      ),
-                      PopupMarkerLayer(
-                        options: PopupMarkerLayerOptions(
-                          markers: getMarkers(),
-                          popupController: _popupController,
-                          markerTapBehavior: MarkerTapBehavior
-                              .togglePopup(), // Toggle popup on marker tap
-                          popupDisplayOptions: PopupDisplayOptions(
-                            builder: (BuildContext context, Marker marker) {
-                              // Popup content based on marker key
-                              if (marker.key == const Key('friendMarker')) {
-                                return Container(
-                                  color: Colors.white,
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text('Friend: ${widget.friendName}'),
-                                );
-                              } else if (marker.key ==
-                                  const Key('currentLocationMarker')) {
-                                return Container(
-                                  color: Colors.white,
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: const Text('You are here'),
-                                );
-                              }
-                              return Container();
-                            },
-                          ),
+                    // Polylines layer
+                    PolylineLayer(
+                      polylineCulling: false,
+                      polylines: [
+                        Polyline(
+                            points: points,
+                            color: Colors.black,
+                            strokeWidth: 5),
+                      ],
+                    ),
+                    MarkerLayer(
+                      markers: getMarkers(), // Use dynamic markers
+                    ),
+                    PopupMarkerLayer(
+                      options: PopupMarkerLayerOptions(
+                        markers: getMarkers(),
+                        popupController: _popupController,
+                        markerTapBehavior: MarkerTapBehavior
+                            .togglePopup(), // Toggle popup on marker tap
+                        popupDisplayOptions: PopupDisplayOptions(
+                          builder: (BuildContext context, Marker marker) {
+                            // Popup content based on marker key
+                            if (marker.key == const Key('friendMarker')) {
+                              return Container(
+                                color: Colors.white,
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text('Friend: ${widget.friendName}'),
+                              );
+                            } else if (marker.key ==
+                                const Key('currentLocationMarker')) {
+                              return Container(
+                                color: Colors.white,
+                                padding: const EdgeInsets.all(8.0),
+                                child: const Text('You are here'),
+                              );
+                            }
+                            return Container();
+                          },
                         ),
                       ),
-                      // Polylines layer
-                      PolylineLayer(
-                        polylineCulling: false,
-                        polylines: [
-                          Polyline(
-                              points: points,
-                              color: Colors.black,
-                              strokeWidth: 5),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // Add the icons on the right side if locations are available
-                  if (_currentLocation != null && _friendLocation != null)
-                    Positioned(
-                      right: 10,
-                      top: MediaQuery.of(context).size.height / 2 - 60,
-                      child: Column(
-                        children: [
-                          // Remove the 'ready' check and ensure mapController is properly handled
-                          IconButton(
-                            icon: Icon(Icons.my_location,
-                                color: Colors.blue, size: 40),
-                            onPressed: () {
-                              if (_currentLocation != null) {
-                                mapController.move(_currentLocation!, 15.0);
-                              } else {
-                                print("Current location is null.");
-                              }
-                            },
-                          ),
-
-                          // Friend's location button
-                          IconButton(
-                            icon: Icon(Icons.person_pin,
-                                color: Colors.green, size: 40),
-                            onPressed: () {
-                              if (_friendLocation != null) {
-                                mapController.move(_friendLocation!, 15.0);
-                              } else {
-                                print("Friend location is null.");
-                              }
-                            },
-                          ),
-                        ],
-                      ),
                     ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    child: GestureDetector(
-                      onTap: _showGPLConfirmationDialog, // Show dialog on tap
-                      child: FlutterLogo(size: 30), // Display the Flutter logo
-                    ),
+                  ],
+                ),
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  child: GestureDetector(
+                    onTap: _showGPLConfirmationDialog, // Show dialog on tap
+                    child: FlutterLogo(size: 30), // Display the Flutter logo
                   ),
-                ],
+                ),
+              ],
+            ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white, // Use white background for a modern look
+        shape:
+            CircularNotchedRectangle(), // Adds a notch for the floating action button
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween, // Align icons to left and right
+            children: [
+              // Remove the 'ready' check and ensure mapController is properly handled
+              IconButton(
+                icon: Icon(Icons.my_location, color: Colors.blue, size: 40),
+                onPressed: () {
+                  if (_currentLocation != null) {
+                    mapController.move(_currentLocation!, 15.0);
+                  } else {
+                    print("Current location is null.");
+                  }
+                },
               ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            getCoordinates();
-          },
-          tooltip: 'increment',
-          child: const Icon(Icons.add),
-        ));
+
+              // Friend's location button
+              IconButton(
+                icon: Icon(Icons.person_pin, color: Colors.green, size: 40),
+                onPressed: () {
+                  if (_friendLocation != null) {
+                    mapController.move(_friendLocation!, 15.0);
+                  } else {
+                    print("Friend location is null.");
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _isLoading
+            ? null
+            : () {
+                getCoordinates();
+              },
+        tooltip: 'Get Coordinates',
+        child: _isLoading
+            ? CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : Icon(Icons.route_sharp),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
   }
 }

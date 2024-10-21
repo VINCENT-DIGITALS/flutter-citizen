@@ -190,8 +190,7 @@ class _HomePageState extends State<HomePage> {
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text('Home Page'),
-          shadowColor: Colors.black,
-          elevation: 2.0,
+     
         ),
         drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
         body: _isLoading

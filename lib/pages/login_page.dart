@@ -90,10 +90,14 @@ class _LoginPageState extends State<LoginPage> {
         // });
       } else {
         // This creates an error, app stops working after sign in
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const AuthPage()),
-        // );
+
+        await Future.delayed(const Duration(seconds: 2));
+        setState(() {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AuthPage()),
+          );
+        });
       }
     } on FirebaseAuthException catch (e) {
       // setState(() {
@@ -116,7 +120,11 @@ class _LoginPageState extends State<LoginPage> {
         textColor: Colors.white,
       );
     } else {
-      // Use pushReplacement to navigate to the AuthPage
+      // Ensure that the widget is still mounted before navigating
+      if (!mounted) return;
+
+      await Future.delayed(const Duration(seconds: 2));
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),

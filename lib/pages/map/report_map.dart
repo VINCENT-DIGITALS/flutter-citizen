@@ -35,7 +35,7 @@ class ReportMapPage extends StatefulWidget {
 class _ReportMapPageState extends State<ReportMapPage> {
   // Raw coordinates got from  OpenRouteService
   List listOfPoints = [];
-
+  bool _isLoading = false;
   // Conversion of listOfPoints into LatLng(Latitude, Longitude) list of points
   List<LatLng> points = [];
   final MapController mapController = MapController();
@@ -174,56 +174,76 @@ class _ReportMapPageState extends State<ReportMapPage> {
   }
 
   //Function to use the openrouteservice
+
   getCoordinates() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     var connectivityResult = await (Connectivity().checkConnectivity());
 
     if (connectivityResult == ConnectivityResult.none) {
-      // If there is no internet connection, show a message
+      // No internet connection
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Internet connection required for routing!'),
           duration: Duration(seconds: 3),
         ),
       );
-      return; // Exit the function
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     }
 
-    if (widget.responderId == null) {
-      // If there is no internet connection, show a message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No responder available!'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return; // Exit the function
-    }
-    if (widget.reportStatus == "Completed") {
-      // If there is no internet connection, show a message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('The incdent report already been completed!'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      return; // Exit the function
-    }
-    //request
     if (_responderLocation != null) {
-      // Convert both current location and evacuation coordinates to string format
+      // Convert current location and evacuation coordinates to string format
       String startPoint = latLngToString(_responderLocation!);
       String endPoint = latLngToString(widget.resportCoords);
 
-      var response = await http.get(getRouteUrl(startPoint, endPoint));
+      try {
+        var response = await http.get(getRouteUrl(startPoint, endPoint));
 
+        setState(() {
+          if (response.statusCode == 200) {
+            var data = jsonDecode(response.body);
+            listOfPoints = data['features'][0]['geometry']['coordinates'];
+            points = listOfPoints
+                .map((p) => LatLng(p[1].toDouble(), p[0].toDouble()))
+                .toList();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Failed to retrieve routing data: ${response.statusCode}'),
+                duration: Duration(seconds: 3),
+              ),
+            );
+            print('Error: ${response.reasonPhrase}');
+          }
+          _isLoading = false; // Stop loading after the response is processed
+        });
+      } catch (e) {
+        setState(() {
+          _isLoading = false; // Stop loading if there's an exception
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error occurred while getting route: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('Exception caught: $e');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Current location not available!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
       setState(() {
-        if (response.statusCode == 200) {
-          var data = jsonDecode(response.body);
-          listOfPoints = data['features'][0]['geometry']['coordinates'];
-          points = listOfPoints
-              .map((p) => LatLng(p[1].toDouble(), p[0].toDouble()))
-              .toList();
-        }
+        _isLoading = false;
       });
     }
   }
@@ -323,147 +343,159 @@ class _ReportMapPageState extends State<ReportMapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Evacuation Map'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed:
-                  _showDeleteConfirmationDialog, // Show confirmation dialog on delete button click
+      appBar: AppBar(
+        title: Text('Evacuation Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed:
+                _showDeleteConfirmationDialog, // Show confirmation dialog on delete button click
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: mapController,
+            options: MapOptions(
+              initialCenter: widget
+                  .resportCoords, // Center on evacuation location initially
+              initialZoom: 15,
+              maxZoom: 20,
+              minZoom: 13,
+              onTap: (_, __) =>
+                  _popupController.hideAllPopups(), // Hide popup on map tap
             ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            FlutterMap(
-              mapController: mapController,
-              options: MapOptions(
-                initialCenter: widget
-                    .resportCoords, // Center on evacuation location initially
-                initialZoom: 15,
-                maxZoom: 20,
-                minZoom: 13,
-                onTap: (_, __) =>
-                    _popupController.hideAllPopups(), // Hide popup on map tap
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.app',
+                tileProvider: tileProvider,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.app',
-                  tileProvider: tileProvider,
-                ),
-                MarkerLayer(
-                  markers: getMarkers(), // Use dynamic markers
-                ),
-                PopupMarkerLayer(
-                  options: PopupMarkerLayerOptions(
-                    markers: getMarkers(),
-                    popupController: _popupController,
-                    markerTapBehavior: MarkerTapBehavior
-                        .togglePopup(), // Toggle popup on marker tap
-                    popupDisplayOptions: PopupDisplayOptions(
-                      builder: (BuildContext context, Marker marker) {
-                        // Popup content based on marker key
-                        if (marker.key == const Key('incidentMarker')) {
-                          return Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Location: ${widget.locationName}'),
-                          );
-                        } else if (marker.key ==
-                            const Key('myCurrentLocationMarker')) {
-                          return Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.all(8.0),
-                            child: const Text('You are here'),
-                          );
-                        } else if (marker.key == const Key('responderMarker')) {
-                          return Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.all(8.0),
-                            child: const Text('The Responders are here'),
-                          );
-                        }
-                        return Container();
-                      },
-                    ),
+              // Polylines layer
+              PolylineLayer(
+                polylineCulling: false,
+                polylines: [
+                  Polyline(points: points, color: Colors.black, strokeWidth: 5),
+                ],
+              ),
+              MarkerLayer(
+                markers: getMarkers(), // Use dynamic markers
+              ),
+              PopupMarkerLayer(
+                options: PopupMarkerLayerOptions(
+                  markers: getMarkers(),
+                  popupController: _popupController,
+                  markerTapBehavior: MarkerTapBehavior
+                      .togglePopup(), // Toggle popup on marker tap
+                  popupDisplayOptions: PopupDisplayOptions(
+                    builder: (BuildContext context, Marker marker) {
+                      // Popup content based on marker key
+                      if (marker.key == const Key('incidentMarker')) {
+                        return Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Location: ${widget.locationName}'),
+                        );
+                      } else if (marker.key ==
+                          const Key('myCurrentLocationMarker')) {
+                        return Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(8.0),
+                          child: const Text('You are here'),
+                        );
+                      } else if (marker.key == const Key('responderMarker')) {
+                        return Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(8.0),
+                          child: const Text('The Responders are here'),
+                        );
+                      }
+                      return Container();
+                    },
                   ),
                 ),
-                // Polylines layer
-                PolylineLayer(
-                  polylineCulling: false,
-                  polylines: [
-                    Polyline(
-                        points: points, color: Colors.black, strokeWidth: 5),
-                  ],
-                ),
-              ],
+              ),
+            ],
+          ),
+        
+          // Flutter logo at the bottom left
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: GestureDetector(
+              onTap: _showGPLConfirmationDialog, // Show dialog on tap
+              child: FlutterLogo(size: 30), // Display the Flutter logo
             ),
-            // Add the icons on the right side if locations are available
-            if (_currentLocation != null && widget.resportCoords != null)
-              Positioned(
-                right: 10,
-                top: MediaQuery.of(context).size.height / 2 - 60,
-                child: Column(
-                  children: [
-                    // Current location button
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white, // Use white background for a modern look
+        shape:
+            CircularNotchedRectangle(), // Adds a notch for the floating action button
+        elevation: 10, // Adds shadow for a floating effect
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween, // Align icons to left and right
+            children: [
+               // Current location button
+                  IconButton(
+                    icon: Icon(Icons.my_location, color: Colors.blue, size: 40),
+                    onPressed: () {
+                      if (_currentLocation != null) {
+                        mapController.move(_currentLocation!, 15.0);
+                      } else {
+                        print("Current location is null.");
+                      }
+                    },
+                  ),
+                  // Incident location button
+                  IconButton(
+                    icon: Icon(Icons.people, color: Colors.red, size: 40),
+                    onPressed: () {
+                      if (widget.resportCoords != null) {
+                        mapController.move(widget.resportCoords!, 15.0);
+                      } else {
+                        print("Current location is null.");
+                      }
+                    },
+                  ),
+                  // Responder's location button (conditionally shown)
+                  if (widget.reportStatus != "Completed" &&
+                      widget.responderId != null)
                     IconButton(
-                      icon:
-                          Icon(Icons.my_location, color: Colors.blue, size: 40),
+                      icon: Icon(Icons.health_and_safety_outlined,
+                          color: Colors.orange, size: 40),
                       onPressed: () {
-                        if (_currentLocation != null) {
-                          mapController.move(_currentLocation!, 15.0);
+                        if (_responderLocation != null) {
+                          mapController.move(_responderLocation!, 15.0);
                         } else {
-                          print("Current location is null.");
+                          print("Evacuation location is null.");
                         }
                       },
                     ),
-                    // Incident location button
-                    IconButton(
-                      icon: Icon(Icons.people, color: Colors.red, size: 40),
-                      onPressed: () {
-                        if (_currentLocation != null) {
-                          mapController.move(widget.resportCoords!, 15.0);
-                        } else {
-                          print("Current location is null.");
-                        }
-                      },
-                    ),
-                    // Responder's location button (conditionally shown)
-                    if (widget.reportStatus != "Completed" &&
-                        widget.responderId != null)
-                      IconButton(
-                        icon: Icon(Icons.health_and_safety_outlined,
-                            color: Colors.orange, size: 40),
-                        onPressed: () {
-                          if (_responderLocation != null) {
-                            mapController.move(_responderLocation!, 15.0);
-                          } else {
-                            print("Evacuation location is null.");
-                          }
-                        },
-                      ),
-                  ],
-                ),
-              ),
-
-            // Flutter logo at the bottom left
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: GestureDetector(
-                onTap: _showGPLConfirmationDialog, // Show dialog on tap
-                child: FlutterLogo(size: 30), // Display the Flutter logo
-              ),
-            ),
-          ],
+                
+            ],
+          ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            getCoordinates();
-          },
-          tooltip: 'increment',
-          child: const Icon(Icons.route),
-        ));
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _isLoading
+            ? null
+            : () {
+                getCoordinates();
+              },
+        tooltip: 'Get Coordinates',
+        child: _isLoading
+            ? CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : Icon(Icons.route_sharp),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
   }
 }

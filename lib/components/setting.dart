@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
+import '../services/auth_page.dart';
 import '../services/database_service.dart';
 import '../services/foreground_service.dart';
 import '../services/location_service.dart';
@@ -372,7 +373,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                         try {
                           await _dbService.signOut();
                           _foregroundService.stopForegroundService();
-                          Navigator.of(context).pop();
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const AuthPage()),
+                          );
                         } catch (e) {
                           print('Logout failed: $e');
                         }

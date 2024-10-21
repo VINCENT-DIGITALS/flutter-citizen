@@ -4,7 +4,6 @@ import '../../components/bottom_bar.dart';
 import '../../components/custom_drawer.dart';
 import 'add_friend.dart';
 import 'friend_page.dart';
-import 'friends_map.dart';
 import 'manage_friends_page.dart';
 
 class CircleHomePage extends StatefulWidget {
@@ -48,22 +47,6 @@ class _CircleHomePageState extends State<CircleHomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => AddFriendsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // View Friends on Map
-                  FeatureCard(
-                    icon: Icons.map,
-                    title: 'View on Map',
-                    description: 'See friends\' locations on the map',
-                    color: Colors.greenAccent,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FriendsMapScreen(),
                         ),
                       );
                     },

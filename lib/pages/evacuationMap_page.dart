@@ -46,8 +46,6 @@ class _EvacuationMapPageState extends State<EvacuationMapPage> {
         key: _scaffoldKey,
         appBar: AppBar(
           title: const Text('Evacuation Map'),
-          shadowColor: Colors.black,
-          elevation: 2.0,
         ),
         drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
         body: ListView(

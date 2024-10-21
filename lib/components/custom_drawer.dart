@@ -15,7 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../pages/emergenacyGuides_page.dart';
 import '../pages/friends/friends_circle_page.dart';
-import '../pages/friends/friends_map.dart';
 import '../services/database_service.dart';
 
 class CustomDrawer extends StatefulWidget {
