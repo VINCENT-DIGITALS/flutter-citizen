@@ -15,7 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'dart:async';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../api/firebase_api.dart';
 import '../services/notificatoin_service.dart';
 import 'evacuationMap_page.dart';
@@ -35,6 +35,8 @@ class _HomePageState extends State<HomePage> {
   final DatabaseService _dbService = DatabaseService();
   Map<String, String> _userData = {};
   bool _isLoading = true;
+  final String phoneNumber =
+      "09497918144"; // Replace with the phone number you want
 
   final ScrollController _scrollController = ScrollController();
   final PageController _postsPageController = PageController();
@@ -162,7 +164,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
- 
+  void _dialNumber(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      throw 'Could not launch $launchUri';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String formattedDateTime = DateFormat('MMMM d, h:mm a', 'en_PH').format(
@@ -170,10 +183,12 @@ class _HomePageState extends State<HomePage> {
             .toUtc()
             .add(Duration(hours: 8))); // UTC+8 for Philippines
     String locationName = _weatherData?['name'] ?? 'Science City of Muñoz, PH';
-    double temperature = _weatherData?['temperature'] ?? 0.0;
+
     int humidity = _weatherData?['humidity'] ?? 0;
-    double windSpeed = _weatherData?['windSpeed'] ?? 0.0;
-    double feelsLike = _weatherData?['feelsLike'] ?? 0.0;
+
+    double temperature = (_weatherData?['temperature'] ?? 0).toDouble();
+    double feelsLike = (_weatherData?['feelsLike'] ?? 0).toDouble();
+    double windSpeed = (_weatherData?['windSpeed'] ?? 0).toDouble();
     String weatherDescription = _weatherData != null &&
             _weatherData!['weather'] != null &&
             (_weatherData!['weather'] as List).isNotEmpty
@@ -190,7 +205,12 @@ class _HomePageState extends State<HomePage> {
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text('Home Page'),
-     
+          actions: [
+            IconButton(
+              icon: Icon(Icons.phone, color: Colors.orange, size: 40),
+              onPressed: () => _dialNumber(phoneNumber),
+            ),
+          ],
         ),
         drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
         body: _isLoading
@@ -217,7 +237,7 @@ class _HomePageState extends State<HomePage> {
                     SizedBox(height: 20),
                     _buildReportAndSOSButtons(context),
                     SizedBox(height: 20),
-                    _buildEvacuationMapAndHotlineDir(),
+                    _buildEvacuationMapAndHotlineDir(context),
                     SizedBox(height: 20),
                     _buildAnnouncements(),
                   ],
@@ -313,6 +333,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildReportAndSOSButtons(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double fontSize =
+        screenWidth < 400 ? 14 : 16; // Adjust font size for smaller screens
+    double iconSize =
+        screenWidth < 400 ? 30 : 40; // Adjust icon size for smaller screens
+
     return Row(
       children: [
         Expanded(
@@ -329,31 +356,38 @@ class _HomePageState extends State<HomePage> {
                 _dbService.redirectToLogin(context);
               }
             },
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.red[600], // Solid red color for urgency
-                borderRadius: BorderRadius.circular(
-                    12.0), // Slightly smaller radius for a cleaner look
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26, // Softer shadow for subtle depth
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2), // Subtle shadow offset
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'REPORT',
-                  style: TextStyle(
-                    color: Colors.white, // White text for contrast
-                    fontSize: 16, // Slightly larger font size
-                    fontWeight: FontWeight.bold,
-                    letterSpacing:
-                        1.1, // Slightly reduced spacing for simplicity
-                  ),
+            child: Material(
+              elevation: 8, // Add shadow elevation
+              shadowColor: Colors.black38,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16), // Add padding for the shadow
+                decoration: BoxDecoration(
+                  color: Colors.white, // Background color of the button
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Shadow color
+                      blurRadius: 10, // Increase to make the shadow softer
+                      offset: Offset(0, 4), // X, Y offset for the shadow
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.report,
+                        color: Colors.red[600], size: iconSize), // Use an icon
+                    SizedBox(height: 8),
+                    Text(
+                      'REPORT',
+                      style: TextStyle(
+                        color: Colors.red[600],
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -362,55 +396,64 @@ class _HomePageState extends State<HomePage> {
         SizedBox(width: 10),
         Expanded(
           child: GestureDetector(
-  onTap: () {
-    if (_dbService.isAuthenticated()) {
-      if (_latitude != null && _longitude != null) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return SosCountdownDialog(
-              latitude: _latitude!, // Pass latitude
-              longitude: _longitude!, // Pass longitude
-            );
-          },
-        );
-      } else {
-        // Show a message if location is not available
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to retrieve your location. Try again later.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } else {
-      _dbService.redirectToLogin(context);
-    }
-  },
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.teal[600], // Teal color for a calming effect
-                borderRadius: BorderRadius.circular(12.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'SOS',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
-                  ),
+            onTap: () {
+              if (_dbService.isAuthenticated()) {
+                if (_latitude != null && _longitude != null) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return SosCountdownDialog(
+                        latitude: _latitude!,
+                        longitude: _longitude!,
+                      );
+                    },
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Failed to retrieve your location. Try again later.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } else {
+                _dbService.redirectToLogin(context);
+              }
+            },
+            child: Material(
+              elevation: 8, // Add shadow elevation
+              shadowColor: Colors.black38,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16), // Add padding for the shadow
+                decoration: BoxDecoration(
+                  color: Colors.white, // Background color of the button
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Shadow color
+                      blurRadius: 10, // Increase to make the shadow softer
+                      offset: Offset(0, 4), // X, Y offset for the shadow
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.warning,
+                        color: Colors.yellow, size: iconSize), // Use an icon
+                    SizedBox(height: 8),
+                    Text(
+                      'SOS',
+                      style: TextStyle(
+                        color: Colors.teal[600],
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -420,7 +463,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildEvacuationMapAndHotlineDir() {
+  Widget _buildEvacuationMapAndHotlineDir(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double fontSize =
+        screenWidth < 400 ? 14 : 16; // Adjust font size for smaller screens
+    double iconSize =
+        screenWidth < 400 ? 30 : 40; // Adjust icon size for smaller screens
+
     return Row(
       children: [
         Expanded(
@@ -433,29 +483,38 @@ class _HomePageState extends State<HomePage> {
                 },
               );
             },
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey[700], // Neutral blue-grey color
-                borderRadius: BorderRadius.circular(12.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Evacuation Map',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
-                  ),
+            child: Material(
+              elevation: 8, // Add shadow elevation
+              shadowColor: Colors.black38,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16), // Add padding for the shadow
+                decoration: BoxDecoration(
+                  color: Colors.white, // Background color of the button
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Shadow color
+                      blurRadius: 10, // Increase to make the shadow softer
+                      offset: Offset(0, 4), // X, Y offset for the shadow
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.map,
+                        color: Colors.green, size: iconSize), // Use an icon
+                    SizedBox(height: 8),
+                    Text(
+                      'Evacuation Map',
+                      style: TextStyle(
+                        color: Colors.blueGrey[700],
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -472,29 +531,38 @@ class _HomePageState extends State<HomePage> {
                 },
               );
             },
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[800], // Simplified solid color
-                borderRadius: BorderRadius.circular(12.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Hotline Directories',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
-                  ),
+            child: Material(
+              elevation: 8, // Add shadow elevation
+              shadowColor: Colors.black38,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16), // Add padding for the shadow
+                decoration: BoxDecoration(
+                  color: Colors.white, // Background color of the button
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Shadow color
+                      blurRadius: 10, // Increase to make the shadow softer
+                      offset: Offset(0, 4), // X, Y offset for the shadow
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.phone,
+                        color: Colors.blue, size: iconSize), // Use an icon
+                    SizedBox(height: 8),
+                    Text(
+                      'Hotline Directories',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -506,7 +574,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildAnnouncements() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _dbService.getLatestAnnouncements(), // Fetch data from Firebase
+      future: _dbService
+          .getLatestItems('announcements'), // Fetch data from Firebase
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -520,29 +589,32 @@ class _HomePageState extends State<HomePage> {
 
         return Container(
           padding: EdgeInsets.all(16.0),
+          constraints: BoxConstraints(maxHeight: 300), // Add height constraint
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color.fromARGB(255, 186, 186, 186)!,
-                const Color.fromARGB(255, 166, 159, 167)!
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16.0),
+            color: Color.fromARGB(255, 219, 219, 219),
+            borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(
-                color:
-                    const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
                 spreadRadius: 2,
-                blurRadius: 5,
-                offset: Offset(0, 3),
+                offset: Offset(0, 5),
               ),
             ],
           ),
-          height: 250,
           child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  'ANNOUNCEMENTS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ),
+              ),
               Expanded(
                 child: PageView.builder(
                   controller: _announcementsPageController,
@@ -572,18 +644,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAnnouncementCard(Map<String, dynamic> announcement) {
-    // Convert Firebase Timestamp to DateTime
     DateTime timestamp = (announcement['timestamp'] as Timestamp).toDate();
-    String formattedDate =
-        DateFormat('MMMM d, yyyy at h:mm a').format(timestamp);
+    String formattedDate = DateFormat('MMMM d, yyyy h:mm a').format(timestamp);
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                AnnouncementDetailPage(announcement: announcement),
+            builder: (context) => AnnouncementDetailPage(
+              announcement: announcement,
+            ),
           ),
         );
       },
@@ -591,14 +662,14 @@ class _HomePageState extends State<HomePage> {
         margin: EdgeInsets.symmetric(horizontal: 8.0),
         padding: EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16.0),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.0),
           boxShadow: [
             BoxShadow(
-              color: const Color.fromARGB(255, 132, 132, 132).withOpacity(0.3),
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 5,
               spreadRadius: 1,
-              blurRadius: 3,
-              offset: Offset(0, 1),
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -607,17 +678,24 @@ class _HomePageState extends State<HomePage> {
           children: [
             Text(
               announcement['title'] ?? 'Announcement',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              maxLines: 1, // Limits to 1 line
+              overflow:
+                  TextOverflow.ellipsis, // Adds ellipsis if text is too long
             ),
-            SizedBox(height: 10),
-            Text(
-              announcement['summary'] ?? 'No summary available',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 5),
+            SizedBox(height: 8),
             Text(
               formattedDate,
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            SizedBox(height: 12),
+            Text(
+              announcement['content'] ??
+                  'Please fill in the fields and enable location services for accurate tracking. Video uploads are limited to 5 seconds.',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              maxLines: 3, // Limits to 3 lines
+              overflow:
+                  TextOverflow.ellipsis, // Adds ellipsis if text is too long
             ),
           ],
         ),

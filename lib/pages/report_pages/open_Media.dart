@@ -18,12 +18,32 @@ class _MediaWidgetState extends State<MediaWidget> {
   void initState() {
     super.initState();
 
-    if (widget.mediaUrl != null && _isVideo(widget.mediaUrl!)) {
-      _videoController = VideoPlayerController.network(widget.mediaUrl!)
-        ..initialize().then((_) {
-          setState(() {});
-        });
+    if (widget.mediaUrl != null) {
+      // Initialize video controller if media URL appears to be a video or fallback
+      if (_isVideo(widget.mediaUrl!)) {
+        _initializeVideoPlayer(widget.mediaUrl!);
+      } 
     }
+  }
+
+  void _initializeVideoPlayer(String url) {
+    _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
+    
+    _videoController!.initialize().then((_) {
+      if (mounted) { // Check if the widget is still in the widget tree
+        setState(() {});
+      }
+    }).catchError((error) {
+      if (mounted) {
+        print("Error initializing video player: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load video. Error: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
   }
 
   @override
@@ -44,7 +64,7 @@ class _MediaWidgetState extends State<MediaWidget> {
             )
           : const CircularProgressIndicator();
     } else {
-      // For images, display the image with click-to-open-fullscreen functionality
+      // For images, display with click-to-open-fullscreen functionality
       return GestureDetector(
         onTap: () {
           setState(() {
@@ -59,6 +79,15 @@ class _MediaWidgetState extends State<MediaWidget> {
             height: 150,
             width: double.infinity,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                  Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                ],
+              );
+            },
           ),
         ),
       );
@@ -66,9 +95,8 @@ class _MediaWidgetState extends State<MediaWidget> {
   }
 
   bool _isVideo(String url) {
-    return url.endsWith('.mp4') ||
-        url.endsWith('.mov') ||
-        url.endsWith('.webm');
+    // Check if URL contains video identifiers since Firebase URLs lack extensions
+    return url.contains('video') || url.contains('mov') || url.contains('mp4') || url.contains('webm');
   }
 
   // Full-screen image display logic

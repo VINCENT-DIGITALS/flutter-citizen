@@ -554,28 +554,24 @@ class DatabaseService {
     }
   }
 
-// Fetch announcements from Firestore
-  Future<List<Map<String, dynamic>>> getAnnouncements() async {
-    try {
-      QuerySnapshot snapshot = await _db
-          .collection('announcements')
-          .orderBy('timestamp', descending: true)
-          .get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      print('Error getting announcements: $e');
-      return [];
-    }
-  }
-
-  // Method to fetch the latest 3 announcements from the 'announcements' collection
-  Future<List<Map<String, dynamic>>> getLatestAnnouncements() async {
-    QuerySnapshot snapshot = await _db
+  // Fetch announcements as a stream from Firestore
+  Stream<List<Map<String, dynamic>>> getAnnouncementsStream() {
+    return _db
         .collection('announcements')
         .orderBy('timestamp', descending: true)
-        .limit(3)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => doc.data() as Map<String, dynamic>)
+            .toList());
+  }
+
+  // Method to fetch the latest announcements or features
+  Future<List<Map<String, dynamic>>> getLatestItems(String collection,
+      {int limit = 3}) async {
+    QuerySnapshot snapshot = await _db
+        .collection(collection)
+        .orderBy('timestamp', descending: true)
+        .limit(limit)
         .get();
 
     return snapshot.docs.map((doc) {

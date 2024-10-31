@@ -105,8 +105,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'Failed to get current location: enable it in app setting.'),
+          content:
+              Text('Failed to get current location: enable it in app setting.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -140,15 +140,17 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
           quality: VideoQuality.LowQuality,
           deleteOrigin: false, // Keep the original file
         );
-
-        if (mediaInfo != null && mediaInfo.path != null) {
-          mediaFile =
-              File(mediaInfo.path!); // Update mediaFile with compressed video
-          await Gal.putVideo(
-              mediaInfo.path!); // Save compressed video to gallery
-        } else {
-          throw ('Something went wrong, please use Image instead');
+        try {
+          if (mediaInfo != null && mediaInfo.path != null) {
+            mediaFile =
+                File(mediaInfo.path!); // Update mediaFile with compressed video
+            await Gal.putVideo(
+                mediaInfo.path!); // Save compressed video to gallery
+          }
+        } catch (e) {
+          print('save gallery media video: ${e}');
         }
+
         // Upload the video to Firebase Storage
         mediaUrl = await _dbService.uploadMedia(mediaFile, 'videos');
       } else if (_imageSelected) {
@@ -414,7 +416,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                       ? CircularProgressIndicator()
                       : IconButton(
                           icon: Icon(Icons.my_location),
-                          onPressed: _getCurrentLocation, // Automatically fill location
+                          onPressed:
+                              _getCurrentLocation, // Automatically fill location
                         ),
                 ),
               ),

@@ -13,6 +13,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/components/my_button.dart';
 import '/components/square_tile.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,10 +29,23 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   late FlutterLocalization _flutterLocalization;
   late String _currentLocale;
+  final String phoneNumber =
+      "09497918144"; // Replace with the phone number you want
 
   final _formKey = GlobalKey<FormState>(); // Form key for validation
   // Password visibility
   bool _passwordVisible = false;
+  void _dialNumber(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      throw 'Could not launch $launchUri';
+    }
+  }
 
   @override
   void initState() {
@@ -170,18 +184,20 @@ class _LoginPageState extends State<LoginPage> {
         shadowColor: Colors.black,
         backgroundColor: const Color.fromARGB(255, 219, 180, 39),
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.phone, color: Colors.green, size: 40),
+          onPressed: () => _dialNumber(phoneNumber),
+        ),
         title: InkWell(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (context) =>
-                      HomePage()), // Replace `TargetPage` with your desired page
+                      HomePage()), // Replace `HomePage` with your target page
             );
           },
-          child: const Text(
-            ' ',
-          ),
+          child: const Text(' '),
         ),
         centerTitle: false,
         elevation: 2,

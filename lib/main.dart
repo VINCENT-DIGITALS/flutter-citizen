@@ -58,6 +58,8 @@ Future<void> initializeFirebase() async {
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
     );
+    // Enable offline persistence
+    // await FirebaseFirestore.instance.settings.persistenceEnabled;
   } catch (e) {
     print('Firebase initialization error: $e');
   }

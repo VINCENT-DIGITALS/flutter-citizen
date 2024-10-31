@@ -215,7 +215,7 @@ class _ReportMapPageState extends State<ReportMapPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                    'Failed to retrieve routing data: ${response.statusCode}'),
+                    'Internet connection required for routing!, please try again'),
                 duration: Duration(seconds: 3),
               ),
             );
@@ -229,7 +229,7 @@ class _ReportMapPageState extends State<ReportMapPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error occurred while getting route: $e'),
+            content: Text('Internet connection required for routing!, please try again'),
             duration: Duration(seconds: 3),
           ),
         );

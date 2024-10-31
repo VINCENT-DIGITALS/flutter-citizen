@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../components/bottom_bar.dart';
@@ -49,7 +50,6 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       appBar: AppBar(
         title: const Text('My Incident Reports'),
       ),
-      
       body: StreamBuilder<DocumentSnapshot>(
         stream:
             _firestore.collection('reports').doc(widget.reportId).snapshots(),
@@ -107,15 +107,29 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                 if (!_isMediaOpened)
                   Center(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _isMediaOpened = true;
+                      onPressed: () async {
+                        final shouldOpen = await _showConfirmationDialog(
+                            context,
+                            "Open Media",
+                            "Are you sure you want to open the media?");
+                        if (shouldOpen) {
+                          setState(() {
+                            _isMediaOpened = true;
+                          });
                           if (mediaUrl != null && _isVideo(mediaUrl)) {
                             _videoController =
                                 VideoPlayerController.network(mediaUrl)
                                   ..initialize().then((_) => setState(() {}));
+                          } else if (mediaUrl != null) {
+                            final uri = Uri.parse(mediaUrl);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri,
+                                  mode: LaunchMode.externalApplication);
+                            } else {
+                              print('Could not launch $mediaUrl');
+                            }
                           }
-                        });
+                        }
                       },
                       icon: const Icon(Icons.play_circle, color: Colors.white),
                       label: const Text(
@@ -160,7 +174,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                       }
                     },
                     icon: const Icon(Icons.map, color: Colors.white),
-                    label: const Text('Toggle Map',
+                    label: const Text('View Map',
                         style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
@@ -177,6 +191,30 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       ),
       bottomNavigationBar: BottomNavBar(currentPage: widget.currentPage),
     );
+  }
+
+  Future<bool> _showConfirmationDialog(
+      BuildContext context, String title, String content) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(title),
+              content: Text(content),
+              actions: [
+                TextButton(
+                  child: const Text("Cancel"),
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                TextButton(
+                  child: const Text("Confirm"),
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   Widget _buildSectionHeader(String title) {
@@ -233,13 +271,32 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
   Widget _buildMediaWidget(String? mediaUrl) {
     if (mediaUrl == null) {
       return const Text('No media available');
-    } else if (_isVideo(mediaUrl)) {
-      return _videoController != null && _videoController!.value.isInitialized
-          ? AspectRatio(
-              aspectRatio: _videoController!.value.aspectRatio,
-              child: VideoPlayer(_videoController!),
-            )
-          : const CircularProgressIndicator();
+    }
+
+    if (!_isImage(mediaUrl)) {
+      return Center(
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final uri = Uri.parse(mediaUrl);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            } else {
+              print('Could not launch $mediaUrl');
+            }
+          },
+          icon: const Icon(Icons.open_in_new, color: Colors.white),
+          label: const Text(
+            'Open Media',
+            style: TextStyle(color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+        ),
+      );
     } else {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
@@ -248,14 +305,29 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
           height: 150,
           width: double.infinity,
           fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return const Center(child: CircularProgressIndicator());
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Text('Error loading image');
+          },
         ),
       );
     }
   }
 
+// Helper function to check if the URL is an image
+  bool _isImage(String url) {
+    return url.endsWith('.jpg') ||
+        url.endsWith('.jpeg') ||
+        url.endsWith('.png') ||
+        url.endsWith('.gif');
+  }
+
   bool _isVideo(String url) {
-    return url.endsWith('.mp4') ||
-        url.endsWith('.mov') ||
-        url.endsWith('.webm');
+    final videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv', '.flv'];
+    return videoExtensions
+        .any((extension) => url.toLowerCase().endsWith(extension));
   }
 }
