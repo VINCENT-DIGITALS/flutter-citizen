@@ -1,7 +1,10 @@
 import 'package:citizen/components/loading.dart';
 import 'package:citizen/services/database_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
+import '../localization/locales.dart';
 
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({
@@ -32,12 +35,12 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
     return Stack(
       children: <Widget>[
         Container(
-          padding: EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(20.0),
           decoration: BoxDecoration(
             shape: BoxShape.rectangle,
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                   color: Colors.black, offset: Offset(0, 10), blurRadius: 10),
             ],
@@ -48,29 +51,37 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Forgot Password",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        LocaleData.forgotPass.getString(context),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                     onPressed: () {
                       Navigator.of(context).pop(); // Close the dialog
                     },
                   ),
                 ],
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
-                  hintText: "Enter your email",
+                  hintText: LocaleData.enteremaill.getString(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
               ),
-              SizedBox(height: 22),
+              const SizedBox(height: 22),
               Align(
                 alignment: Alignment.bottomRight,
                 child: TextButton(
@@ -89,9 +100,12 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                     }
                     Navigator.of(context).pop(); // Close the dialog
                   },
-                  child: Text(
-                    "Send",
-                    style: TextStyle(fontSize: 18),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      LocaleData.send.getString(context),
+                      style: const TextStyle(fontSize: 18),
+                    ),
                   ),
                 ),
               ),

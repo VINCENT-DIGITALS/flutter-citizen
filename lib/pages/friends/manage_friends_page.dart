@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:latlong2/latlong.dart';
 import '../../components/bottom_bar.dart';
+import '../../localization/locales.dart';
 import '../../services/database_service.dart';
 import '../map/friends_map.dart';
 import '../map/map_page.dart';
@@ -98,7 +100,18 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Manage Friends")),
+      appBar: AppBar(
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            LocaleData.friendManage.getString(context),
+            maxLines: 2, // Limit to 2 lines
+            style: TextStyle(fontSize: 18), // Adjust font size as needed
+            textAlign: TextAlign.center, // Center align for better readability
+            softWrap: true, // Enable soft wrapping
+          ),
+        ),
+      ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(
@@ -161,7 +174,10 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
                                       Icon(Icons.location_pin,
                                           color: Colors.blueAccent),
                                       SizedBox(width: 8),
-                                      Text('Show Location'),
+                                      Text(
+                                        LocaleData.friendShow
+                                            .getString(context),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -172,7 +188,10 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
                                       Icon(Icons.delete,
                                           color: Colors.redAccent),
                                       SizedBox(width: 8),
-                                      Text('Remove Friend'),
+                                      Text(
+                                        LocaleData.friendRemove
+                                            .getString(context),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -197,7 +216,7 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            'Remove Friend',
+            LocaleData.friendRemove.getString(context),
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Text(
@@ -205,7 +224,7 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
           actions: [
             TextButton(
               child: Text(
-                'Cancel',
+                LocaleData.cancel.getString(context),
                 style: TextStyle(color: Colors.grey),
               ),
               onPressed: () {
@@ -242,7 +261,7 @@ class _ManageFriendsScreenState extends State<ManageFriendsScreen> {
                     .withOpacity(0.7)), // Larger icon, color update
             SizedBox(height: 16), // Spacing
             Text(
-              "No friends added yet",
+              LocaleData.friendNothing.getString(context),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

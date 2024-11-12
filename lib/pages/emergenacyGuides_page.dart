@@ -5,6 +5,9 @@ import 'package:citizen/safetyGuides/liveSfaty_guide.dart';
 import 'package:citizen/safetyGuides/naturalDisaster_guide.dart';
 import 'package:citizen/safetyGuides/socialDisaster_guide.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class EmergencyGuidesPage extends StatefulWidget {
   @override
@@ -14,7 +17,7 @@ class EmergencyGuidesPage extends StatefulWidget {
 class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
   Map<String, String> _selectedGuideDetails = {
     "title": "Select a guide to see details",
-    "details": ""
+    // "details": ""
   };
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -28,7 +31,7 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text('Emergency Guides'),
+          title: Text(LocaleData.emergencyGuides.getString(context)),
           shadowColor: Colors.black,
           elevation: 2.0,
         ),
@@ -43,7 +46,7 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
               _buildGuideDetails(screenSize),
               SizedBox(height: screenSize.height * 0.02),
               Text(
-                'Safety Guides',
+                LocaleData.safetyGuides.getString(context),
                 style: TextStyle(
                   fontSize: isLandscape ? 22 : 18,
                   fontWeight: FontWeight.bold,
@@ -53,10 +56,10 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
               _buildGuideCard(
                 context,
                 screenSize: screenSize,
-                title: 'Natural Disaster',
+                title: LocaleData.naturalDisaster.getString(context),
                 subtitle:
-                    '10 mins ago. Fire reported at Pelmoka Street. Firefighters are on site.',
-                imageUrl: 'assets/natural_disaster.jpg',
+                    'Learn about safety measures and evacuation procedures during natural disasters such as earthquakes, floods, and typhoons.',
+                imageUrl: 'assets/images/MoreGuides/NaturalDisaster.png',
                 details:
                     'Details about natural disasters, including how to stay safe, evacuation procedures, and emergency contacts.',
                 guideWidget: NaturalDisasterGuide(),
@@ -64,10 +67,10 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
               _buildGuideCard(
                 context,
                 screenSize: screenSize,
-                title: 'Social Disaster',
+                title: LocaleData.socialDisaster.getString(context),
                 subtitle:
-                    '30 mins ago. Heavy rainfall causing floods in Maligaya. Evacuation advised.',
-                imageUrl: 'assets/social_disaster.jpg',
+                    'Guidelines for handling social disasters, including civil unrest and conflicts, and ways to stay safe.',
+                imageUrl: 'assets/images/MoreGuides/SocialDisaster.png',
                 details:
                     'Details about social disasters, including what to do during a flood, safe places, and how to communicate with authorities.',
                 guideWidget: SocialDisasterGuide(),
@@ -75,10 +78,10 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
               _buildGuideCard(
                 context,
                 screenSize: screenSize,
-                title: 'Life Safety',
+                title: LocaleData.lifeSafety.getString(context),
                 subtitle:
-                    '1 hour ago. Major accident on Maharlika Highway. Traffic is diverted.',
-                imageUrl: 'assets/life_safety.jpg',
+                    'Essential life safety tips for emergencies like accidents, injuries, and basic first aid steps.',
+                imageUrl: 'assets/images/MoreGuides/LifeSafety.png',
                 details:
                     'Details on life safety, including first aid tips, how to respond to traffic accidents, and emergency numbers.',
                 guideWidget: LifeSafetyGuide(),
@@ -86,10 +89,10 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
               _buildGuideCard(
                 context,
                 screenSize: screenSize,
-                title: 'Emergency Preparedness',
+                title: LocaleData.emergencyPreparedness.getString(context),
                 subtitle:
-                    '1 hour ago. Major accident on Maharlika Highway. Traffic is diverted.',
-                imageUrl: 'assets/emergency_preparedness.jpg',
+                    'Prepare yourself and your family with essential tips on creating an emergency kit and plans.',
+                imageUrl: 'assets/images/MoreGuides/EmergencyPreparedness.png',
                 details:
                     'Details on emergency preparedness, including tips on how to prepare an emergency kit, and family communication plans.',
                 guideWidget: EmergencyPreparednessGuide(),
@@ -118,13 +121,13 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: screenSize.height * 0.01),
-            Text(
-              _selectedGuideDetails["details"]!,
-              style: TextStyle(
-                fontSize: screenSize.width * 0.04,
-              ),
-            ),
+            // SizedBox(height: screenSize.height * 0.01),
+            // // Text(
+            // //   _selectedGuideDetails["details"]!,
+            // //   style: TextStyle(
+            // //     fontSize: screenSize.width * 0.04,
+            // //   ),
+            // // ),
           ],
         ),
       ),
@@ -159,21 +162,56 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         child: ListTile(
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.asset(
-              imageUrl,
-              width: screenSize.width * 0.15,
-              height: screenSize.width * 0.15,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Image.asset(
-                  'lib/images/placeholder_image.png', // Replace with your placeholder image path
-                  width: screenSize.width * 0.15,
-                  height: screenSize.width * 0.15,
-                  fit: BoxFit.cover,
-                );
-              },
+          leading: GestureDetector(
+            onTap: () {
+              // Full-screen view for the image
+              showGeneralDialog(
+                context: context,
+                barrierDismissible: true,
+                barrierLabel:
+                    MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                transitionDuration: Duration(milliseconds: 300),
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return Center(
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: InteractiveViewer(
+                        minScale: 0.1,
+                        maxScale: 10.0,
+                        child: Container(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                imageUrl,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.asset(
+                imageUrl,
+                width: screenSize.width * 0.15,
+                height: screenSize.width * 0.15,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset(
+                    'lib/images/placeholder_image.png',
+                    width: screenSize.width * 0.15,
+                    height: screenSize.width * 0.15,
+                    fit: BoxFit.cover,
+                  );
+                },
+              ),
             ),
           ),
           title: Text(

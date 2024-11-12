@@ -39,8 +39,11 @@ class NotificationService {
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
           if (message.notification != null) {
             // Display the notification when the app is in the foreground
-            showNotification(message.notification!.title ?? "Title",
-                message.notification!.body ?? "Body");
+            showNotification(
+                message.notification!.title ?? "Title",
+                message.notification!.body ?? "Body",
+                "emergencynotifsound" // Replace this with the actual sound file name
+                );
           }
         });
       } else {
@@ -81,17 +84,18 @@ class NotificationService {
     return status.isGranted;
   }
 
-  // Display a local notification on Android
-  Future<void> showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  // Display a local notification on Android with a custom sound
+  Future<void> showNotification(String title, String body, String sound) async {
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'your_channel_id', // Customize channel ID
       'your_channel_name', // Customize channel name
       importance: Importance.max,
       priority: Priority.high,
       showWhen: false,
+      sound: RawResourceAndroidNotificationSound(sound), // Set custom sound
     );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
     );
     await flutterLocalNotificationsPlugin.show(
@@ -102,8 +106,10 @@ class NotificationService {
       payload: 'Notification Payload',
     );
   }
-    // Required: handle background messages
-  static Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+
+  // Required: handle background messages
+  static Future<void> _firebaseMessagingBackgroundHandler(
+      RemoteMessage message) async {
     await Firebase.initializeApp();
     print("Handling a background message: ${message.messageId}");
   }
@@ -116,7 +122,7 @@ class NotificationService {
 
   // Method to open app settings where users can enable or disable notifications
   Future<void> openAppSettings() async {
-    openAppSettings();  // Opens the app's system settings
+    openAppSettings(); // Opens the app's system settings
     print("Opened app settings.");
   }
 }

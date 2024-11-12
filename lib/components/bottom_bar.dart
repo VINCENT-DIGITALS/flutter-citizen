@@ -1,5 +1,7 @@
+import 'package:citizen/localization/locales.dart';
 import 'package:citizen/pages/announcement_page.dart';
 import 'package:citizen/pages/home_page.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import '../pages/friends/friends_circle_page.dart';
 import 'package:citizen/pages/weather_page.dart';
 import 'package:citizen/pages/map_page.dart';
@@ -80,6 +82,31 @@ class _BottomNavBarState extends State<BottomNavBar> {
     }
   }
 
+  List<BottomNavigationBarItem> _buildBottomNavigationBarItems() {
+    return [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: LocaleData.general.getString(context),
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.report),
+        label: LocaleData.reports.getString(context),
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.notifications),
+        label: LocaleData.updates.getString(context),
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.people_alt_rounded),
+        label: LocaleData.friends.getString(context),
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.settings),
+        label: LocaleData.settings.getString(context),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
@@ -93,30 +120,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       unselectedItemColor: Colors.grey, // Set your unselected color here
       showSelectedLabels: true, // Show label for selected item
       showUnselectedLabels: true, // Show label for unselected items
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.report),
-          label: 'Reports',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: 'Updates',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.people_alt_rounded),
-          label: 'friends',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(
-            Icons.settings,
-          ),
-          label: 'Setting',
-        ),
-      ],
+      items: _buildBottomNavigationBarItems(),
     );
   }
 

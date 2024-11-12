@@ -7,13 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
 import 'firebase_options.dart';
 import 'localization/locales.dart';
-import 'pages/announcement_page.dart';
 
+import 'package:flutter/services.dart';
 import 'models/splash_screen.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -22,6 +19,11 @@ void main() async {
   await dotenv.load(fileName: '.env');
 
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    // LOCKING THE APP RATOTION INTO POTRAIT ONLY
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   await initializeFirebase();
   // Initialize Notification Service for Android
   await NotificationService().initialize();

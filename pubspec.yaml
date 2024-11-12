@@ -117,6 +117,7 @@ dependencies:
   flutter_map_marker_popup: ^6.1.2
   share_plus: ^10.0.0
   url_launcher: ^6.3.1
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:
@@ -150,5 +151,25 @@ flutter:
     - assets/images/ICONLAUNCHER.png
     - .env
     - assets/maps/munoz.map
-    
-      
+    - assets/images/AboutApp/AppLogo.png
+    - assets/images/AboutCDRRMO/CDRRMOLogo.png
+    - assets/images/CPR/CPR(CardiopulmonaryResuscitation).png
+    - assets/images/FireSafetyTips/CreateanEscapePlan.png
+    - assets/images/FireSafetyTips/InstallSmoke Alarms.png
+    - assets/images/FirstAidTips/Bleeding.png
+    - assets/images/FirstAidTips/burns.png
+    - assets/images/FirstAidTips/Choking.png
+    - assets/images/FirstAidTips/CPR(CardiopulmonaryResuscitation).png
+    - assets/images/FirstAidTips/Poisoning.png
+    - assets/images/MentalHealth/MentalHealthAwareness.png
+    - assets/images/MentalHealth/Self-CareTipsforMentalHealth.png
+    - assets/images/MoreGuides/EmergencyPreparedness.png
+    - assets/images/MoreGuides/LifeSafety.png
+    - assets/images/MoreGuides/NaturalDisaster.png
+    - assets/images/MoreGuides/SocialDisaster.png
+    - assets/images/PersonalSafety/PersonalSafetyTips.png
+    - assets/images/30.png
+    - assets/images/31.png
+    - assets/images/32.png
+    - assets/images/LOGOAPP0.png
+    - assets/sounds/emergencynotifsound.mp3

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class SocialDisasterGuide extends StatelessWidget {
   @override
@@ -8,7 +11,7 @@ class SocialDisasterGuide extends StatelessWidget {
       child: ListView(
         children: [
           Text(
-            'Social Disaster Guide',
+            LocaleData.socialDisasterGuide.getString(context),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -16,12 +19,12 @@ class SocialDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            'Social disasters such as civil unrest, mass gatherings, or pandemics can have significant impacts on communities. This guide provides strategies for staying safe and informed.',
+            LocaleData.socialDisasterGuideDesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'Before a Social Disaster',
+            LocaleData.socialDisasterprep.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -29,20 +32,12 @@ class SocialDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Stay informed about potential social disruptions in your area through news outlets and social media.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Develop a communication plan with your family in case of an emergency.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Keep an emergency kit ready, including masks, sanitizers, and non-perishable food.',
+            LocaleData.socialDisasterprepdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'During a Social Disaster',
+            LocaleData.socialDisasterDuring.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -50,20 +45,12 @@ class SocialDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Avoid areas where large crowds are gathering to reduce the risk of injury or exposure to dangerous situations.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Follow local authorities’ instructions, including curfews and evacuation orders.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Stay connected with friends and family to ensure everyone’s safety.',
+            LocaleData.socialDisasterDuringdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'After a Social Disaster',
+            LocaleData.socialDisasterAfter.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -71,20 +58,12 @@ class SocialDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Check on your family and neighbors, especially those who are elderly or disabled.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Report any damage or suspicious activity to local authorities.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Seek support from community organizations if you are in need of assistance.',
+            LocaleData.socialDisasterAfterdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'Emergency Contacts',
+            LocaleData.socialDisasterContacts.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -92,7 +71,7 @@ class SocialDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Keep a list of important contacts, including local authorities, emergency services, and family members, readily available.',
+            LocaleData.socialDisasterContactsdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           // Add more detailed sections if needed

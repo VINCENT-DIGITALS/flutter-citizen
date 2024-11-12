@@ -12,16 +12,14 @@ class LoadingIndicatorDialog {
   LoadingIndicatorDialog._internal();
 
   void show(BuildContext context) {
-    if (isDisplayed) {
-      return;
-    }
+    if (isDisplayed) return;
 
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.transparent, // Makes the barrier color transparent
-      builder: (BuildContext context) {
-        _context = context;
+      barrierColor: Colors.transparent, // Transparent barrier color
+      builder: (BuildContext dialogContext) {
+        _context = dialogContext;
         isDisplayed = true;
         return Center(
           child: Container(
@@ -30,12 +28,7 @@ class LoadingIndicatorDialog {
               color: Colors.black54, // Semi-transparent background
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-              ],
-            ),
+            child: const CircularProgressIndicator(),
           ),
         );
       },
@@ -43,7 +36,7 @@ class LoadingIndicatorDialog {
   }
 
   void dismiss() {
-    if (isDisplayed && _context != null) {
+    if (isDisplayed && _context != null && Navigator.of(_context!).canPop()) {
       Navigator.of(_context!).pop();
       isDisplayed = false;
       _context = null;

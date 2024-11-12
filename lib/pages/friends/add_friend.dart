@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import '../../components/bottom_bar.dart';
+import '../../localization/locales.dart';
 import '../../services/database_service.dart';
 
 class AddFriendsScreen extends StatefulWidget {
@@ -42,7 +44,7 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Friend request sent successfully!')),
+        SnackBar(content: Text(LocaleData.friendrequestSuccess.getString(context),)),
       );
     } catch (e) {
       setState(() {
@@ -61,21 +63,21 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Send Friend Request'),
-          content: Text('Are you sure you want to send a friend request?'),
+          title: Text(LocaleData.sendFriends.getString(context),),
+          content: Text(LocaleData.sendFriendsPrompt.getString(context),),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('Cancel'),
+              child: Text(LocaleData.cancel.getString(context),),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
                 sendFriendRequest(friendId); // Proceed with sending the request
               },
-              child: Text('Send'),
+              child: Text(LocaleData.send.getString(context),),
             ),
           ],
         );
@@ -88,7 +90,7 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Add Friends',
+          LocaleData.addfriends.getString(context),
         ),
       ),
       body: Column(
@@ -101,7 +103,7 @@ class _AddFriendsScreenState extends State<AddFriendsScreen> {
                 searchUsers(searchQuery);
               },
               decoration: InputDecoration(
-                hintText: "Search for friends",
+                hintText: LocaleData.searchFriends.getString(context),
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

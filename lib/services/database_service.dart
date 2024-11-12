@@ -21,6 +21,18 @@ class DatabaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  Future<bool> isEmailVerified(User user) async {
+    // Reload user data to get the latest verification status
+    await user.reload();
+    return user.emailVerified;
+  }
+
+  Future<void> sendVerificationEmail(User user) async {
+    if (!user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
   Future<void> saveFcmToken(String userId) async {
     try {
       final FirebaseApi firebaseApi = FirebaseApi();
@@ -29,33 +41,31 @@ class DatabaseService {
       print('Failed to save FCM token: $e');
     }
   }
+// Add SOS data to the current user's Firestore subcollection 'sos_requests'
+Future<void> addSosToUser(String userId, GeoPoint location) async {
+  try {
+    // Reference to the 'sos_requests' subcollection for the specific user
+    final sosRequestsRef = _db.collection('citizens').doc(userId).collection('sos_requests');
 
-// Add SOS data to the current user's Firestore document
-  Future<void> addSosToUser(String userId, GeoPoint location) async {
-    try {
-      // Reference to the current user's document in the 'citizens' collection
-      final userDocRef = _db.collection('citizens').doc(userId);
+    // Generate a client-side timestamp using DateTime.now()
+    final timestamp = DateTime.now();
 
-      // Generate a client-side timestamp using DateTime.now()
-      final timestamp = DateTime.now();
+    // Prepare the SOS data with the client-side timestamp
+    final sosData = {
+      'location': location,
+      'createdAt': timestamp,
+    };
 
-      // Prepare the SOS data with the same client-side timestamp
-      final sosData = {
-        'location': location,
-        'createdAt': timestamp, // Client-side timestamp used here
-      };
+    // Add a new document with the SOS data in the 'sos_requests' subcollection
+    await sosRequestsRef.add(sosData);
 
-      // Use set() with merge: true and arrayUnion to append SOS data
-      await userDocRef.set({
-        'sos': FieldValue.arrayUnion([sosData])
-      }, SetOptions(merge: true));
-
-      print("SOS data added to user document with client-side timestamp.");
-    } catch (e) {
-      print("Error adding SOS data: $e");
-      throw e;
-    }
+    print("SOS data added to user's 'sos_requests' subcollection with client-side timestamp.");
+  } catch (e) {
+    print("Error adding SOS data: $e");
+    throw e;
   }
+}
+
 
   // Getter for the current user
   User? get currentUser {
@@ -251,7 +261,7 @@ class DatabaseService {
     await GoogleSignIn().signOut();
     SharedPreferencesService prefs =
         await SharedPreferencesService.getInstance();
-    _clearUserData(prefs);
+    clearUserData(prefs);
   }
 
 //------------------------FRIENDS METHODS------------------------------------------------------------------------
@@ -554,10 +564,11 @@ class DatabaseService {
     }
   }
 
-  // Fetch announcements as a stream from Firestore
+// Fetch announcements as a stream from Firestore where archived is false
   Stream<List<Map<String, dynamic>>> getAnnouncementsStream() {
     return _db
         .collection('announcements')
+        .where('archived', isEqualTo: false) // Filter archived items
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -565,20 +576,22 @@ class DatabaseService {
             .toList());
   }
 
-  // Method to fetch the latest announcements or features
-  Future<List<Map<String, dynamic>>> getLatestItems(String collection,
-      {int limit = 3}) async {
-    QuerySnapshot snapshot = await _db
+// Method to fetch the latest announcements where archived is false
+  Stream<List<Map<String, dynamic>>> getLatestItemsStream(String collection,
+      {int limit = 3}) {
+    return _db
         .collection(collection)
+        .where('archived', isEqualTo: false) // Filter archived items
         .orderBy('timestamp', descending: true)
         .limit(limit)
-        .get();
-
-    return snapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      data['id'] = doc.id; // Optional: include document ID if needed
-      return data;
-    }).toList();
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Include document ID if needed
+        return data;
+      }).toList();
+    });
   }
 
   // Method to fetch the latest 3 announcements from the 'posts' collection
@@ -808,6 +821,16 @@ class DatabaseService {
       // Obtain auth details from user
       final GoogleSignInAuthentication gAuth = await gUser.authentication;
 
+      // Check if email already exists in Firestore under 'citizens' collection
+      final existingCitizen = await FirebaseFirestore.instance
+          .collection('citizens')
+          .where('email', isEqualTo: gUser.email)
+          .get();
+
+      if (existingCitizen.docs.isNotEmpty) {
+        return 'An account with this email already exists. Please log in instead.';
+      }
+
       // Create a new credential for user
       final credential = GoogleAuthProvider.credential(
         accessToken: gAuth.accessToken,
@@ -823,11 +846,11 @@ class DatabaseService {
         return 'Google sign-in failed';
       }
 
-      // Create Firestore document
+      // Create Firestore document for the new user
       await _createUserDocumentIfNotExists(
           user, gUser.displayName, '', gUser.email);
 
-      return 'Account successfully created.';
+      return 'Account successfully created and Email Verification Request also been sent to your email.';
     } catch (e) {
       print("Something went wrong: $e");
       return 'An unknown error occurred: $e';
@@ -845,36 +868,38 @@ class DatabaseService {
 
       // Obtain auth details from user
       final GoogleSignInAuthentication gAuth = await gUser.authentication;
-
-      // Obtain the user's email from Google sign-in
       final email = gUser.email;
 
-      // Fetch user document from Firestore
-      final userDoc =
-          _db.collection("citizens").where('email', isEqualTo: email).limit(1);
-      final docSnapshot = await userDoc.get();
+      // Check if email already exists in Firestore under 'citizens' collection
+      final existingCitizen = await FirebaseFirestore.instance
+          .collection('citizens')
+          .where('email', isEqualTo: email)
+          .get();
 
-      if (docSnapshot.docs.isEmpty) {
-        return 'Account does not exist. Please register first.';
+      if (existingCitizen.docs.isNotEmpty) {
+        // Email exists in the Firestore collection
+        final userData = existingCitizen.docs.first.data();
+
+        // Check if the user account is deactivated
+        if (userData['status'] == 'Deactivated') {
+          return 'User account is deactivated, contact the operator to activate';
+        }
       }
 
-      final userData = docSnapshot.docs.first.data();
-      final documentId = docSnapshot.docs.first.id;
-      if (userData['status'] == 'Deactivated') {
-        return 'User account is deactivated, contact the operator to activate';
-      }
-
-      // Sign in to Firebase with the credential
+      // If no conflicts, proceed with Google sign-in
       final credential = GoogleAuthProvider.credential(
         accessToken: gAuth.accessToken,
         idToken: gAuth.idToken,
       );
       UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Store user details in SharedPreferences
       SharedPreferencesService prefs =
           await SharedPreferencesService.getInstance();
+      final userData = existingCitizen.docs.first.data();
+      final documentId = existingCitizen.docs.first.id;
+
       prefs.saveUserData({
         'uid': userData['uid'] ?? '',
         'email': userData['email'] ?? '',
@@ -953,7 +978,7 @@ class DatabaseService {
         case 'invalid-credential':
           //flutterToastError('Incorrect password');
           print('Something went wrong: $e');
-          return 'Incorrect password';
+          return 'Incorrect Email/password';
         //break;
         case 'user-disabled':
           //flutterToastError('User account has been disabled');\
@@ -980,7 +1005,7 @@ class DatabaseService {
   }
 
   // Clear user data from SharedPreferences
-  void _clearUserData(SharedPreferencesService prefs) {
+  void clearUserData(SharedPreferencesService prefs) {
     prefs.saveData('uid', '');
     prefs.saveData('email', '');
     prefs.saveData('displayName', '');

@@ -1,38 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class AboutCdrrmoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Screen size for responsive layout
     var screenSize = MediaQuery.of(context).size;
     bool isLargeScreen = screenSize.width > 600;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('About CDRRMO'),
+        title: Text(
+          LocaleData.aboutCDRRMO.getString(context),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Adding a container for future image or video
-            Container(
-              height: isLargeScreen ? 300 : 200, // Responsive height
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.grey[300], // Placeholder color
-              ),
-              child: Center(
-                child: Text(
-                  'Image/Video Placeholder',
-                  style: TextStyle(fontSize: 18, color: Colors.black54),
+            // Placeholder image with full-screen zoom on tap
+            GestureDetector(
+              onTap: () {
+                showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: MaterialLocalizations.of(context)
+                      .modalBarrierDismissLabel,
+                  transitionDuration: Duration(milliseconds: 300),
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return Center(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: InteractiveViewer(
+                          minScale: 0.1,
+                          maxScale: 10.0,
+                          child: Container(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/images/AboutCDRRMO/CDRRMOLogo.png', // Replace with actual image path
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Container(
+                height: isLargeScreen ? 300 : 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.grey[300],
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/AboutCDRRMO/CDRRMOLogo.png'), // Replace with actual image path
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
             SizedBox(height: 20),
-            
-            // Using Card to make content visually appealing
+
+            // About CDRRMO Guide Card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -44,13 +80,13 @@ class AboutCdrrmoPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'About CDRRMO',
-                      style: TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold),
+                      LocaleData.aboutCDRRMOGuide.getString(context),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 16),
                     Text(
-                      'The City Disaster Risk Reduction and Management Office (CDRRMO) is responsible for disaster preparedness, risk mitigation, response, and recovery initiatives within the city. It operates in coordination with local, national, and international partners to ensure effective disaster management. The key areas of focus include emergency response, capacity building, and public education.',
+                      LocaleData.aboutCDRRMOGuideDesc.getString(context),
                       style: TextStyle(fontSize: 16),
                     ),
                   ],
@@ -59,7 +95,7 @@ class AboutCdrrmoPage extends StatelessWidget {
             ),
             SizedBox(height: 20),
 
-            // Another card for Mission and Vision
+            // Mission and Vision Card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -71,22 +107,22 @@ class AboutCdrrmoPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mission',
-                      style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
+                      LocaleData.aboutCDRRMOMission.getString(context),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      'To enhance the safety and resilience of the community by implementing effective disaster risk management strategies.',
+                      LocaleData.aboutAppMissionDesc.getString(context),
                       style: TextStyle(fontSize: 16),
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'Vision',
-                      style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
+                      LocaleData.aboutCDRRMOVission.getString(context),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      'A disaster-resilient city where citizens are prepared and informed about disaster risks and management protocols.',
+                      LocaleData.aboutCDRRMOVissionDesc.getString(context),
                       style: TextStyle(fontSize: 16),
                     ),
                   ],

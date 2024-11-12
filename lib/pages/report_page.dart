@@ -4,6 +4,7 @@ import 'package:citizen/components/loading.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:citizen/services/location_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,8 +13,9 @@ import 'package:video_compress/video_compress.dart';
 import 'package:video_player/video_player.dart';
 import 'package:gal/gal.dart';
 
+import '../localization/locales.dart';
 import '../services/database_service.dart';
-
+import '../pages/report_pages/summary_report_page.dart';
 class ReportPage extends StatefulWidget {
   final String currentPage;
   const ReportPage({Key? key, this.currentPage = 'report'}) : super(key: key);
@@ -97,16 +99,16 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
         _longitude = position.longitude; // Store longitude
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Success: Access to location been granted'),
+         SnackBar(
+          content: Text( LocaleData.locationSuccess.getString(context),),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+         SnackBar(
           content:
-              Text('Failed to get current location: enable it in app setting.'),
+              Text( LocaleData.locationError.getString(context),),
           backgroundColor: Colors.red,
         ),
       );
@@ -191,6 +193,11 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
           // _landmarkController.dispose();
         });
       }
+      // Redirect to another page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ReportsSummaryPage()), // Replace SuccessPage() with your target page widget
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -234,7 +241,9 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text('Submit Report'),
+        title: Text(
+          LocaleData.reportSubmit.getString(context),
+        ),
         shadowColor: Colors.black,
         elevation: 2.0,
       ),
@@ -256,15 +265,15 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(9.0),
                 child: Column(
                   children: [
-                    Text('How to use.',
+                    Text(LocaleData.howtousereport.getString(context),
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
                     Text(
-                      ' Complete all Fields if possible and turning on location is required.\n Video is limited to 5s only. ',
+                      LocaleData.howtousereportDesc.getString(context),
                       style: TextStyle(fontSize: 16),
                     ),
                   ],
@@ -361,7 +370,9 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                                         color: _imageSelected
                                             ? Colors.white
                                             : Colors.black),
-                                    label: Text('IMAGE',
+                                    label: Text(
+                                        LocaleData.reportImage
+                                            .getString(context),
                                         style: TextStyle(
                                             color: _imageSelected
                                                 ? Colors.white
@@ -404,8 +415,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                 readOnly: true, // Disable typing
                 decoration: InputDecoration(
                   fillColor: Colors.white,
-                  hintText: 'Click the icon to find location',
-                  labelText: 'This is your current address',
+                  hintText: LocaleData.reportAddressIcon.getString(context),
+                  labelText: LocaleData.reportCurrentAddress.getString(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -428,9 +439,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                 controller: _landmarkController,
                 decoration: InputDecoration(
                   fillColor: Colors.white,
-                  hintText:
-                      'Enter an easily recognized Building name or Objects.',
-                  labelText: 'Landmark',
+                  hintText: LocaleData.reportLandmarkDesc.getString(context),
+                  labelText: LocaleData.reportLandmark.getString(context),
                   floatingLabelBehavior:
                       FloatingLabelBehavior.always, // Move label to top
                   border: OutlineInputBorder(
@@ -454,8 +464,10 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(right: 5.0),
                           child: DropdownButtonFormField<String>(
                             decoration: InputDecoration(
-                              labelText: 'Type of Incident',
-                              hintText: "Type of Incident",
+                              labelText: LocaleData.reportTypeAccident
+                                  .getString(context),
+                              hintText: LocaleData.reportTypeAccident
+                                  .getString(context),
                               floatingLabelBehavior:
                                   FloatingLabelBehavior.always,
                               border: OutlineInputBorder(
@@ -483,6 +495,20 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
+                    
+                    ],
+                  );
+                },
+              ),
+            ),
+            // Incident Type, Number of Persons Injured, and Seriousness in a Row (Responsive)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Row(
+                    children: [
+                      
                       Flexible(
                         flex: 2,
                         child: Padding(
@@ -491,8 +517,10 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                             controller: _injuredCountController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              labelText: '# of Injured',
-                              hintText: '# of Injured',
+                              labelText:
+                                  LocaleData.reportInjured.getString(context),
+                              hintText:
+                                  LocaleData.reportInjured.getString(context),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -510,7 +538,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(left: 5.0),
                           child: DropdownButtonFormField<String>(
                             decoration: InputDecoration(
-                              labelText: 'Seriousness',
+                              labelText: LocaleData.reportSeriousness
+                                  .getString(context),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -539,6 +568,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                 },
               ),
             ),
+           
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
               child: Container(
@@ -549,8 +579,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
                   decoration: InputDecoration(
-                    labelText: 'Report Description',
-                    hintText: 'Enter your report description here...',
+                    labelText: LocaleData.reportDesc.getString(context),
+                    hintText: LocaleData.reportDescDesc.getString(context),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -570,8 +600,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.check,
                       color: Colors.black), // Change icon color to black
-                  label: const Text(
-                    'Submit Report',
+                  label: Text(
+                    LocaleData.reportSubmit.getString(context),
                     style: TextStyle(
                         color: Colors.black), // Change text color to black
                   ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
 import '../../components/bottom_bar.dart';
 import '../../components/custom_drawer.dart';
+import '../../localization/locales.dart';
 import 'add_friend.dart';
 import 'friend_page.dart';
 import 'manage_friends_page.dart';
@@ -23,8 +25,8 @@ class _CircleHomePageState extends State<CircleHomePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text(
-          'Friend/Cricle',
+        title: Text(
+          LocaleData.friends.getString(context),
         ),
       ),
       drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
@@ -39,8 +41,8 @@ class _CircleHomePageState extends State<CircleHomePage> {
                   // Search and Add Friends
                   FeatureCard(
                     icon: Icons.person_add_alt_1,
-                    title: 'Add Friends',
-                    description: 'Search and send friend requests',
+                    title: LocaleData.addfriends.getString(context),
+                    description: LocaleData.searchnSendfriends.getString(context),
                     color: Colors.blueAccent,
                     onTap: () {
                       Navigator.push(
@@ -55,8 +57,8 @@ class _CircleHomePageState extends State<CircleHomePage> {
                   // Manage Friend Requests
                   FeatureCard(
                     icon: Icons.notifications,
-                    title: 'Friend Requests',
-                    description: 'View and manage friend requests',
+                    title: LocaleData.friendrequest.getString(context),
+                    description: LocaleData.friendrequestManage.getString(context),
                     color: Colors.orangeAccent,
                     onTap: () {
                       Navigator.push(
@@ -71,8 +73,8 @@ class _CircleHomePageState extends State<CircleHomePage> {
                   // List of Friends
                   FeatureCard(
                     icon: Icons.group,
-                    title: 'List of Friends',
-                    description: 'View and manage friends',
+                    title: LocaleData.friendList.getString(context),
+                    description: LocaleData.friendManage.getString(context),
                     color: Colors.purpleAccent,
                     onTap: () {
                       Navigator.push(

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class FirstAidTipsPage extends StatelessWidget {
   @override
@@ -8,7 +11,9 @@ class FirstAidTipsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('First Aid Tips'),
+        title: Text(
+          LocaleData.firstAidTips.getString(context),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -18,11 +23,9 @@ class FirstAidTipsPage extends StatelessWidget {
             _buildSection(
               context,
               isLargeScreen,
-              'CPR (Cardiopulmonary Resuscitation)',
-              'CPR Image/Video Placeholder',
-              '1. Call for help immediately.\n'
-                  '2. Push hard and fast in the center of the chest (100-120 compressions per minute).\n'
-                  '3. Open the airway and give rescue breaths if trained.',
+              LocaleData.cardiopulmonaryR.getString(context),
+              'assets/images/FirstAidTips/CPR(CardiopulmonaryResuscitation).png',
+              LocaleData.cPRDesc.getString(context),
             ),
             SizedBox(height: 20),
 
@@ -30,11 +33,9 @@ class FirstAidTipsPage extends StatelessWidget {
             _buildSection(
               context,
               isLargeScreen,
-              'Bleeding',
-              'Bleeding Image/Video Placeholder',
-              '1. Apply direct pressure to the wound with a clean cloth or bandage.\n'
-                  '2. Elevate the injured area above the heart if possible.\n'
-                  '3. Seek medical attention if bleeding does not stop.',
+              LocaleData.bleeding.getString(context),
+              'assets/images/FirstAidTips/Bleeding.png',
+              LocaleData.bleedingDesc.getString(context),
             ),
             SizedBox(height: 20),
 
@@ -42,11 +43,9 @@ class FirstAidTipsPage extends StatelessWidget {
             _buildSection(
               context,
               isLargeScreen,
-              'Burns',
-              'Burns Image/Video Placeholder',
-              '1. Cool the burn with running water for at least 10 minutes.\n'
-                  '2. Cover the burn with a sterile, non-stick bandage or cloth.\n'
-                  '3. Avoid using ice, as it can cause further damage.',
+              LocaleData.burns.getString(context),
+              'assets/images/FirstAidTips/burns.png',
+              LocaleData.burnDesc.getString(context),
             ),
             SizedBox(height: 20),
 
@@ -54,11 +53,9 @@ class FirstAidTipsPage extends StatelessWidget {
             _buildSection(
               context,
               isLargeScreen,
-              'Choking',
-              'Choking Image/Video Placeholder',
-              '1. Encourage the person to keep coughing if they can.\n'
-                  '2. Perform back blows and abdominal thrusts (Heimlich maneuver) if the person cannot breathe.\n'
-                  '3. Call for emergency help if the obstruction persists.',
+              LocaleData.choking.getString(context),
+              'assets/images/FirstAidTips/Choking.png',
+              LocaleData.chokingDesc.getString(context),
             ),
             SizedBox(height: 20),
 
@@ -66,11 +63,9 @@ class FirstAidTipsPage extends StatelessWidget {
             _buildSection(
               context,
               isLargeScreen,
-              'Poisoning',
-              'Poisoning Image/Video Placeholder',
-              '1. Call emergency services or a poison control center immediately.\n'
-                  '2. Do not induce vomiting unless directed by a healthcare professional.\n'
-                  '3. Provide as much information as possible about the substance ingested.',
+              LocaleData.poisoning.getString(context),
+              'assets/images/FirstAidTips/Poisoning.png',
+              LocaleData.poisoningDesc.getString(context),
             ),
           ],
         ),
@@ -78,64 +73,92 @@ class FirstAidTipsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(BuildContext context, bool isLargeScreen, String title, String placeholderText, String details) {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Slidable Placeholder for images/videos
-          Container(
-            height: isLargeScreen ? 250 : 150, // Responsive height
+Widget _buildSection(
+  BuildContext context,
+  bool isLargeScreen,
+  String title,
+  String imagePath,
+  String details,
+) {
+  return Container(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () {
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+              // barrierColor: Colors.black87, // Dark background for full-screen effect
+              transitionDuration: Duration(milliseconds: 300),
+              pageBuilder: (context, animation, secondaryAnimation) {
+                return Center(
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: InteractiveViewer(
+                      minScale: 0.1,
+                      maxScale: 10.0,
+                      child: Container(
+                        // color: Colors.black, // Optional: background color for the dialog
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+          child: Container(
+            height: isLargeScreen ? 300 : 180,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Colors.grey[300],
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
+              ),
             ),
-            child: PageView(
+          ),
+        ),
+        SizedBox(height: 16),
+        Card(
+          elevation: 5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Text(
-                    placeholderText,
-                    style: TextStyle(fontSize: 18, color: Colors.black54),
-                  ),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                // Additional slides can be added here
-                Center(
-                  child: Text(
-                    'Another Image/Video Placeholder',
-                    style: TextStyle(fontSize: 18, color: Colors.black54),
-                  ),
+                SizedBox(height: 10),
+                Text(
+                  details,
+                  style: TextStyle(fontSize: 16),
                 ),
               ],
             ),
           ),
-          SizedBox(height: 16),
-          // Card for details
-          Card(
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    details,
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+
 }

@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/splash_screen.dart';
+import '../privacyPolicyWidget/privacyPolicyPrompt.dart';
 import '/components/my_button.dart';
 import '/components/square_tile.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,7 +24,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final DatabaseService _dbService = DatabaseService();
   // text editing controllers
   final emailController = TextEditingController();
@@ -30,8 +33,8 @@ class _LoginPageState extends State<LoginPage> {
   late FlutterLocalization _flutterLocalization;
   late String _currentLocale;
   final String phoneNumber =
-      "09497918144"; // Replace with the phone number you want
-
+      "09667746951"; // Replace with the phone number you want
+  bool isLoading = false;
   final _formKey = GlobalKey<FormState>(); // Form key for validation
   // Password visibility
   bool _passwordVisible = false;
@@ -53,13 +56,20 @@ class _LoginPageState extends State<LoginPage> {
     _flutterLocalization = FlutterLocalization.instance;
     _currentLocale = 'en'; // Set a default value
     _loadLocale();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
   }
 
   // error message
   //String errorMessage = '';
 
   // sign user in method
-  void signUserIn() async {
+  Future<void> signUserIn() async {
+    setState(() {
+      isLoading = true;
+    });
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Fluttertoast.showToast(
         msg: "Fields must not be empty",
@@ -68,20 +78,26 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
     if (!DatabaseService().isValidEmail(emailController.text)) {
       Fluttertoast.showToast(
-        msg: "Please enter a valid email address",
+        msg: LocaleData.validEmail.getString(context),
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );
+      setState(() {
+        isLoading = false;
+      });
       return;
     }
 
-    LoadingIndicatorDialog().show(context);
+    // LoadingIndicatorDialog().show(context);
 
     try {
       String? user = await _dbService.signInWithEmail(
@@ -104,12 +120,18 @@ class _LoginPageState extends State<LoginPage> {
         // });
       } else {
         // This creates an error, app stops working after sign in
-
+        // Fluttertoast.showToast(
+        //   msg: 'LogIn Sucess, Redirecting...',
+        //   toastLength: Toast.LENGTH_SHORT,
+        //   gravity: ToastGravity.BOTTOM,
+        //   backgroundColor: Colors.green,
+        //   textColor: Colors.white,
+        // );
         await Future.delayed(const Duration(seconds: 2));
         setState(() {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const AuthPage()),
+            MaterialPageRoute(builder: (context) => AuthPage()),
           );
         });
       }
@@ -118,13 +140,32 @@ class _LoginPageState extends State<LoginPage> {
       //   errorMessage = 'Incorrect email or password. Please try again.';
       // });
     } finally {
-      LoadingIndicatorDialog().dismiss();
+      // LoadingIndicatorDialog().dismiss();
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  void signInWithGoogle() async {
+void signInWithGoogle() async {
+  // Show the loading dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    },
+  );
+
+  try {
+    // Sign out any existing sessions and start the sign-in process
     await DatabaseService().signOut();
     String? result = await DatabaseService().signInWithGoogle();
+
+    // Check the result and show an error toast if needed
     if (result != null) {
       Fluttertoast.showToast(
         msg: result,
@@ -137,21 +178,47 @@ class _LoginPageState extends State<LoginPage> {
       // Ensure that the widget is still mounted before navigating
       if (!mounted) return;
 
+      // Optional delay to give the loading indicator time to display
       await Future.delayed(const Duration(seconds: 2));
 
+      // Navigate to AuthPage if sign-in is successful
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),
       );
     }
+  } catch (e) {
+    // Handle errors (e.g., show error toast or log error)
+    Fluttertoast.showToast(
+      msg: 'An error occurred: $e',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+    );
+  } finally {
+    // Hide the loading dialog
+    // Navigator.of(context, rootNavigator: true).pop();
   }
+}
 
+
+  late AnimationController _controller;
   @override
   void dispose() {
     // Dispose controllers
     emailController.dispose();
     passwordController.dispose();
+    _controller.dispose();
     super.dispose();
+  }
+
+  void _navigateToAuthPage() async {
+    await _controller.forward(); // Start the animation
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const SplashScreen()),
+    );
   }
 
   Future<void> _loadLocale() async {
@@ -293,399 +360,462 @@ class _LoginPageState extends State<LoginPage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       child: Container(
-        width: containerWidth,
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 255, 255, 255),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: const Offset(0, 2), // changes position of shadow
-            ),
-          ],
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Align(
-          alignment: const AlignmentDirectional(0, 0),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  AutoSizeText(
-                    LocaleData.loginNow.getString(context),
-                    maxLines: 2,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      color: Color(0xFF14181B),
-                      fontSize: 25,
-                      letterSpacing: 0,
-                      fontWeight: FontWeight.bold,
-                    ),
+          width: containerWidth,
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 5,
+                blurRadius: 7,
+                offset: const Offset(0, 2), // changes position of shadow
+              ),
+            ],
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Stack(
+            children: [
+              // Positioned widget to place the refresh icon in the top-right corner
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 6,
+                        offset: Offset(2, 3),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  Form(
-                    key: _formKey,
-                    autovalidateMode: AutovalidateMode.disabled,
+                  child: IconButton(
+                    icon: RotationTransition(
+                      turns: Tween(begin: 0.0, end: 1.0).animate(_controller),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        color: Colors.blue.shade700,
+                        size: 26,
+                      ),
+                    ),
+                    onPressed: _navigateToAuthPage,
+                    tooltip: 'Refresh',
+                  ),
+                ),
+              ),
+              Align(
+                alignment: const AlignmentDirectional(0, 0),
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: SingleChildScrollView(
                     child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              0, 10, 0, 10),
-                          child: TextFormField(
-                            controller: emailController,
-                            autofocus: false,
-                            obscureText: false,
-                            decoration: const InputDecoration(
-                              labelText: 'Email Address',
-                              labelStyle: TextStyle(
-                                fontFamily: 'Inter',
-                                color: Color.fromARGB(255, 0, 0, 0),
-                                fontSize: 14,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              alignLabelWithHint: false,
-                              hintStyle: TextStyle(
-                                fontFamily: 'Inter',
-                                color: Color.fromARGB(255, 0, 0, 0),
-                                fontSize: 14,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFF018203),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFFFF5963),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.black,
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFFFF5963),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                            ),
+                        AutoSizeText(
+                          LocaleData.loginNow.getString(context),
+                          maxLines: 2,
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFF14181B),
+                            fontSize: 25,
+                            letterSpacing: 0,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              0, 10, 0, 10),
-                          child: TextFormField(
-                            controller: passwordController,
-                            autofocus: false,
-                            obscureText: !_passwordVisible,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              labelStyle: const TextStyle(
-                                fontFamily: 'Inter',
-                                color: Color.fromARGB(255, 0, 0, 0),
-                                fontSize: 14,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              alignLabelWithHint: false,
-                              hintStyle: const TextStyle(
-                                fontFamily: 'Inter',
-                                color: Color.fromARGB(255, 0, 0, 0),
-                                fontSize: 14,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFF018203),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              focusedErrorBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFFFF5963),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.black,
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              errorBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Color(0xFFFF5963),
-                                  width: 2,
-                                ),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              suffixIcon: InkWell(
-                                onTap: () => setState(() {
-                                  _passwordVisible = !_passwordVisible;
-                                }),
-                                focusNode: FocusNode(skipTraversal: true),
-                                child: Icon(
-                                  _passwordVisible
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: const Color(0xFF57636C),
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // if (errorMessage.isNotEmpty)
-                        //   Padding(
-                        //     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 5),
-                        //     child: Row(
-                        //       mainAxisAlignment: MainAxisAlignment.center,
-                        //       children: [
-                        //         AutoSizeText(
-                        //           errorMessage,
-                        //           maxLines: 2,
-                        //           softWrap: true,
-                        //           overflow: TextOverflow.ellipsis,
-                        //           minFontSize: 8,
-                        //           stepGranularity: 1,
-                        //           style: const TextStyle(
-                        //             fontFamily: 'Inter',
-                        //             color: Colors.red,
-                        //             fontSize: 11,
-                        //             letterSpacing: 0,
-                        //             fontWeight: FontWeight.bold,
-                        //           ),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //   ),
-                        Padding(
-                          padding:
-                              const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                        const SizedBox(height: 10),
+                        Form(
+                          key: _formKey,
+                          autovalidateMode: AutovalidateMode.disabled,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              GestureDetector(
-                                onTap: () {
-                                  // Handle the forgot password action
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return const ForgotPasswordDialog();
-                                    },
-                                  );
-                                },
-                                child: Text(
-                                  LocaleData.forgotPass.getString(context),
-                                  style: const TextStyle(
-                                    color: Color.fromARGB(255, 13, 102, 227),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 10, 0, 0),
-                              child: ElevatedButton(
-                                onPressed: signUserIn,
-                                style: ButtonStyle(
-                                  padding: MaterialStateProperty.all(
-                                    const EdgeInsets.symmetric(
-                                        horizontal: 30, vertical: 15),
-                                  ),
-                                  shape: MaterialStateProperty.all(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 10, 0, 10),
+                                child: TextFormField(
+                                  controller: emailController,
+                                  autofocus: false,
+                                  obscureText: false,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Email Address',
+                                    labelStyle: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontSize: 14,
+                                      letterSpacing: 0,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    alignLabelWithHint: false,
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontSize: 14,
+                                      letterSpacing: 0,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF018203),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFFFF5963),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black,
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFFFF5963),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
                                     ),
                                   ),
-                                  backgroundColor:
-                                      MaterialStateProperty.resolveWith<Color>(
-                                          (states) {
-                                    if (states
-                                        .contains(MaterialState.pressed)) {
-                                      return const Color.fromARGB(255, 93, 255,
-                                          68); // Color when button is pressed
-                                    }
-                                    return Colors.blue; // Default color
-                                  }),
-                                ),
-                                child: Text(
-                                  LocaleData.signInTextT.getString(context),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  0, 10, 0, 0),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage()),
-                                  );
-                                },
-                                style: ButtonStyle(
-                                  padding: MaterialStateProperty.all(
-                                    const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 5),
-                                  ),
-                                  shape: MaterialStateProperty.all(
-                                    RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
+
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 10, 0, 10),
+                                child: TextFormField(
+                                  controller: passwordController,
+                                  autofocus: false,
+                                  obscureText: !_passwordVisible,
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    labelStyle: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontSize: 14,
+                                      letterSpacing: 0,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    alignLabelWithHint: false,
+                                    hintStyle: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                      fontSize: 14,
+                                      letterSpacing: 0,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                    focusedBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFF018203),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    focusedErrorBorder:
+                                        const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFFFF5963),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    enabledBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black,
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    errorBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Color(0xFFFF5963),
+                                        width: 2,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    suffixIcon: InkWell(
+                                      onTap: () => setState(() {
+                                        _passwordVisible = !_passwordVisible;
+                                      }),
+                                      focusNode: FocusNode(skipTraversal: true),
+                                      child: Icon(
+                                        _passwordVisible
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        color: const Color(0xFF57636C),
+                                        size: 22,
+                                      ),
                                     ),
                                   ),
-                                  backgroundColor:
-                                      MaterialStateProperty.resolveWith<Color>(
-                                          (states) {
-                                    if (states
-                                        .contains(MaterialState.pressed)) {
-                                      return Colors.grey[
-                                          700]!; // Color when button is pressed
-                                    }
-                                    return Colors.grey; // Default color
-                                  }),
-                                ),
-                                child: const Text(
-                                  'GUEST',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                              // if (errorMessage.isNotEmpty)
+                              //   Padding(
+                              //     padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 5),
+                              //     child: Row(
+                              //       mainAxisAlignment: MainAxisAlignment.center,
+                              //       children: [
+                              //         AutoSizeText(
+                              //           errorMessage,
+                              //           maxLines: 2,
+                              //           softWrap: true,
+                              //           overflow: TextOverflow.ellipsis,
+                              //           minFontSize: 8,
+                              //           stepGranularity: 1,
+                              //           style: const TextStyle(
+                              //             fontFamily: 'Inter',
+                              //             color: Colors.red,
+                              //             fontSize: 11,
+                              //             letterSpacing: 0,
+                              //             fontWeight: FontWeight.bold,
+                              //           ),
+                              //         ),
+                              //       ],
+                              //     ),
+                              //   ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 0, 0, 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        // Handle the forgot password action
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return const ForgotPasswordDialog();
+                                          },
+                                        );
+                                      },
+                                      child: Text(
+                                        LocaleData.forgotPass
+                                            .getString(context),
+                                        style: const TextStyle(
+                                          color:
+                                              Color.fromARGB(255, 13, 102, 227),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                            0, 10, 0, 0),
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        setState(() =>
+                                            isLoading = true); // Start loading
+                                        await signUserIn();
+                                        setState(() =>
+                                            isLoading = false); // Stop loading
+                                      },
+                                      style: ButtonStyle(
+                                        padding: MaterialStateProperty.all(
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 30, vertical: 15),
+                                        ),
+                                        shape: MaterialStateProperty.all(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                          ),
+                                        ),
+                                        backgroundColor: MaterialStateProperty
+                                            .resolveWith<Color>((states) {
+                                          if (states.contains(
+                                              MaterialState.pressed)) {
+                                            return const Color.fromARGB(255, 93,
+                                                255, 68); // Pressed color
+                                          }
+                                          return Colors.blue; // Default color
+                                        }),
+                                      ),
+                                      child: isLoading
+                                          ? const CircularProgressIndicator(
+                                              color: Colors
+                                                  .white) // Loading indicator
+                                          : Text(
+                                              LocaleData.signInTextT
+                                                  .getString(context),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
 
-                        Padding(
-                          padding:
-                              const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  thickness: 1.5,
-                                  color: Colors.grey[400],
+// Existing Row widget code
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                            0, 10, 0, 0),
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        _dbService.signOut();
+
+                                        // Navigate to HomePage after sign out or if no user was signed in
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => HomePage()),
+                                        );
+                                      },
+                                      style: ButtonStyle(
+                                        padding: MaterialStateProperty.all(
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 15, vertical: 5),
+                                        ),
+                                        shape: MaterialStateProperty.all(
+                                          RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                          ),
+                                        ),
+                                        backgroundColor: MaterialStateProperty
+                                            .resolveWith<Color>((states) {
+                                          if (states.contains(
+                                              MaterialState.pressed)) {
+                                            return Colors.grey[
+                                                700]!; // Color when button is pressed
+                                          }
+                                          return Colors.grey; // Default color
+                                        }),
+                                      ),
+                                      child: Text(
+                                        LocaleData.guest.getString(context),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 10, 0, 0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(
+                                        thickness: 1.5,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      child: Text(
+                                        LocaleData.continueWith
+                                            .getString(context),
+                                        style:
+                                            TextStyle(color: Colors.grey[700]),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(
+                                        thickness: 1.5,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10.0),
-                                child: Text(
-                                  LocaleData.continueWith.getString(context),
-                                  style: TextStyle(color: Colors.grey[700]),
-                                ),
-                              ),
-                              Expanded(
-                                child: Divider(
-                                  thickness: 1.5,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Usage
-                              SquareTile(
-                                onTap: () async {
-                                  signInWithGoogle();
-                                },
-                                imagePath: 'lib/images/google.png',
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              AutoSizeText(
-                                LocaleData.notAMember.getString(context),
-                                maxLines: 2,
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  color: Colors.grey,
-                                  fontSize: 10,
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => RegisterPage()),
-                                  );
-                                },
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 10, 0, 0),
                                 child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Usage
+                                    SquareTile(
+                                      onTap: () async {
+                                        signInWithGoogle();
+                                      },
+                                      imagePath: 'lib/images/google.png',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    0, 10, 0, 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     AutoSizeText(
-                                      LocaleData.registerNow.getString(context),
+                                      LocaleData.notAMember.getString(context),
                                       maxLines: 2,
                                       style: const TextStyle(
                                         fontFamily: 'Inter',
-                                        color: Colors.blue,
+                                        color: Colors.grey,
                                         fontSize: 10,
                                         letterSpacing: 0,
                                         fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  RegisterPage()),
+                                        );
+                                      },
+                                      child: Row(
+                                        children: [
+                                          AutoSizeText(
+                                            LocaleData.registerNow
+                                                .getString(context),
+                                            maxLines: 2,
+                                            style: const TextStyle(
+                                              fontFamily: 'Inter',
+                                              color: Colors.blue,
+                                              fontSize: 10,
+                                              letterSpacing: 0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -697,12 +827,10 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ),
-      ),
+            ],
+          )),
     );
   }
 }

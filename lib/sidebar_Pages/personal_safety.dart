@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class PersonalSafetyPage extends StatelessWidget {
   @override
@@ -8,24 +11,54 @@ class PersonalSafetyPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Personal Safety'),
+        title: Text(LocaleData.personalSafety.getString(context)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Placeholder for future personal safety video/image
-            Container(
-              height: isLargeScreen ? 300 : 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.grey[300],
-              ),
-              child: Center(
-                child: Text(
-                  'Personal Safety Image/Video Placeholder',
-                  style: TextStyle(fontSize: 18, color: Colors.black54),
+            // Personal Safety Image/Video Placeholder with Fullscreen Zoom
+            GestureDetector(
+              onTap: () {
+                // Show full-screen zoomable image
+                showGeneralDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+                  transitionDuration: Duration(milliseconds: 300),
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return Center(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: InteractiveViewer(
+                          minScale: 0.1,
+                          maxScale: 10.0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                'assets/images/PersonalSafety/PersonalSafetyTips.png', // Replace with actual image path
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Container(
+                height: isLargeScreen ? 200 : 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.grey[300],
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/PersonalSafety/PersonalSafetyTips.png'), // Replace with actual image path
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -43,15 +76,13 @@ class PersonalSafetyPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Personal Safety Tips',
+                      LocaleData.personalSafetyTips.getString(context),
                       style: TextStyle(
                           fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 16),
                     Text(
-                      '1. Always be aware of your surroundings, especially in unfamiliar areas.\n'
-                      '2. Trust your instincts. If something doesn’t feel right, leave the situation.\n'
-                      '3. Carry a personal safety device, such as a whistle or pepper spray, if needed.',
+                      LocaleData.personalSafetyTipsDesc.getString(context),
                       style: TextStyle(fontSize: 16),
                     ),
                   ],

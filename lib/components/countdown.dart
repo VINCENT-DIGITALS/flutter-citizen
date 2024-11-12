@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 
+import '../localization/locales.dart';
 import '../services/database_service.dart';
 
 class SosCountdownDialog extends StatefulWidget {
@@ -32,14 +34,12 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
     super.dispose();
   }
 
-
   void startCountdown() {
     timer = Timer.periodic(Duration(seconds: 1), (Timer timer) async {
       if (countdown == 0) {
         timer.cancel();
         handleSOS(); // Trigger SOS functionality here
       } else {
-
         setState(() {
           countdown--;
         });
@@ -50,8 +50,6 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
   void handleSOS() async {
     try {
       GeoPoint location = GeoPoint(widget.latitude, widget.longitude);
-
-   
 
       // Get the user ID from the current user in the database service
       String? userId = _dbService.currentUser?.uid;
@@ -68,14 +66,14 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: Text(
-                "SOS Triggered!",
+                LocaleData.sosTriggered.getString(context),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                 ),
               ),
               content: Text(
-                "Your SOS with location has been sent. Please wait for help or take necessary actions.",
+                LocaleData.yourSos.getString(context),
                 textAlign: TextAlign.center,
               ),
               actions: [
@@ -84,7 +82,7 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
                     Navigator.of(context).pop(); // Close the dialog
                   },
                   child: Text(
-                    "Close",
+                    LocaleData.close.getString(context),
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -124,7 +122,7 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        "SOS TRIGGERED!!",
+        LocaleData.sosTriggered.getString(context),
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 18,
@@ -134,7 +132,7 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "After 10 seconds, your SOS and location will be sent to your Friends.",
+            LocaleData.after10.getString(context),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 20),
@@ -173,7 +171,9 @@ class _SosCountdownDialogState extends State<SosCountdownDialog> {
           // Cancel Button
           ElevatedButton(
             onPressed: cancelSOS,
-            child: Text("Cancel"),
+            child: Text(
+              LocaleData.cancel.getString(context),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 255, 255, 255),
               textStyle: TextStyle(fontWeight: FontWeight.bold),

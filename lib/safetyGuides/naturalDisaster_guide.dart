@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+
+import '../localization/locales.dart';
 
 class NaturalDisasterGuide extends StatelessWidget {
   @override
@@ -8,7 +11,7 @@ class NaturalDisasterGuide extends StatelessWidget {
       child: ListView(
         children: [
           Text(
-            'Natural Disaster Guide',
+            LocaleData.naturalDisasterGuide.getString(context),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -16,12 +19,12 @@ class NaturalDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            'Natural disasters such as earthquakes, hurricanes, and floods can strike with little or no warning. This guide will help you prepare for, respond to, and recover from these events.',
+            LocaleData.naturalDisasterGuideDesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'Preparation',
+            LocaleData.naturalDisasterprep.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -29,20 +32,12 @@ class NaturalDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Create an emergency plan for your family, including evacuation routes and communication methods.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Prepare an emergency kit with essentials such as water, food, medications, and important documents.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Stay informed about the risks in your area and sign up for emergency alerts.',
+            LocaleData.naturalDisasterprepdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'During a Natural Disaster',
+            LocaleData.naturalDisasterDuring.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -50,20 +45,12 @@ class NaturalDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Follow evacuation orders and move to higher ground if necessary.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Stay indoors and away from windows during severe weather.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Listen to local authorities and follow their instructions.',
+            LocaleData.naturalDisasterDuringdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'After a Natural Disaster',
+            LocaleData.naturalDisasterAfter.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -71,20 +58,12 @@ class NaturalDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '1. Check for injuries and provide first aid as needed.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '2. Avoid downed power lines and flooded areas.',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '3. Contact your insurance company to report any damage.',
+            LocaleData.naturalDisasterAfterdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           SizedBox(height: 16),
           Text(
-            'Emergency Contacts',
+            LocaleData.naturalDisasterContacts.getString(context),
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -92,7 +71,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Keep a list of emergency contacts, including local authorities, hospitals, and family members, in your emergency kit.',
+            LocaleData.naturalDisasterContactsdesc.getString(context),
             style: TextStyle(fontSize: 18),
           ),
           // Add more detailed sections if needed

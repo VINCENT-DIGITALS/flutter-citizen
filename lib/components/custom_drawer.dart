@@ -1,3 +1,4 @@
+import 'package:citizen/localization/locales.dart';
 import 'package:citizen/pages/home_page.dart';
 import 'package:citizen/pages/hotlineDirectories_page.dart';
 import 'package:citizen/pages/post_page.dart';
@@ -11,7 +12,9 @@ import 'package:citizen/sidebar_Pages/mental_health_page.dart';
 import 'package:citizen/sidebar_Pages/personal_safety.dart';
 import 'package:citizen/sidebar_Pages/privacy_policy_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 import '../pages/emergenacyGuides_page.dart';
 import '../pages/friends/friends_circle_page.dart';
@@ -102,21 +105,31 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        "Hello, $displayName!",
-                        style:
-                            const TextStyle(fontSize: 16, color: Colors.black),
+                      Expanded(
+                        child: AutoSizeText(
+                          LocaleData.hello
+                              .getString(context)
+                              .replaceAll('%s', displayName),
+                          style: const TextStyle(
+                              fontSize: 16, color: Colors.black),
+                          maxLines: 2,
+                          minFontSize: 10,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
-                  ),
+                  )
                 ],
               ),
             ),
             const Divider(color: Colors.grey),
-            _buildSectionTitle("General"),
+            _buildSectionTitle(
+              LocaleData.general.getString(context),
+            ),
             _buildDrawerItem(
                 icon: Icons.home,
-                text: 'Home',
+                text:  LocaleData.home
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -136,7 +149,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
             //     }),
             _buildDrawerItem(
                 icon: Icons.location_on,
-                text: 'Directories',
+                text: LocaleData.hotlineDirectories
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -147,10 +161,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
 
             const Divider(color: Colors.grey),
-            _buildSectionTitle("Emergency Guides"),
+            _buildSectionTitle(LocaleData.emergencyGuides
+                              .getString(context),),
             _buildDrawerItem(
                 icon: Icons.health_and_safety,
-                text: 'First Aid Tips',
+                text: LocaleData.firstAidTips
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -160,7 +176,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.fire_extinguisher,
-                text: 'Fire Safety Tips',
+                text: LocaleData.fireSafetyTips
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -171,7 +188,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.heart_broken_outlined,
-                text: 'CPR',
+                text: LocaleData.cPR
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -181,7 +199,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.security,
-                text: 'Personal Safety',
+                text: LocaleData.personalSafety
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -192,7 +211,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.health_and_safety,
-                text: 'Mental Health',
+                text: LocaleData.mentalHealth
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -202,7 +222,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.more_horiz_outlined,
-                text: 'More Guides',
+                text: LocaleData.moreGuides
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -212,10 +233,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   );
                 }),
             const Divider(color: Colors.grey),
-            _buildSectionTitle("Account"),
+            _buildSectionTitle(LocaleData.account
+                              .getString(context),),
             _buildDrawerItem(
                 icon: Icons.person,
-                text: 'User Profile',
+                text: LocaleData.userProfile
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -226,7 +249,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.people,
-                text: 'Friends/Circle',
+                text: LocaleData.friendsCircle
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   // Check if user is logged in
@@ -243,10 +267,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             const Divider(color: Colors.grey),
 
-            _buildSectionTitle("App"),
+            _buildSectionTitle(LocaleData.app
+                              .getString(context),),
             _buildDrawerItem(
                 icon: Icons.info,
-                text: 'About CDRRMO',
+                text: LocaleData.aboutCDRRMO
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -256,7 +282,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.privacy_tip,
-                text: 'Privacy Policy',
+                text: LocaleData.privacyPolicy
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(
@@ -267,7 +294,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 }),
             _buildDrawerItem(
                 icon: Icons.info_outline,
-                text: 'About App',
+                text: LocaleData.aboutApp
+                              .getString(context),
                 iconColor: iconColor,
                 onTap: () {
                   Navigator.push(

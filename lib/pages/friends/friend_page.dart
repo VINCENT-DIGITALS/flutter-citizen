@@ -1,5 +1,7 @@
+import 'package:citizen/localization/locales.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:shimmer/shimmer.dart'; // Add this package to pubspec.yaml
 import '../../components/bottom_bar.dart';
 import '../../services/database_service.dart';
@@ -19,7 +21,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Friend Requests")),
+      appBar: AppBar(title: Text(LocaleData.friendrequest.getString(context),)),
       body: StreamBuilder<DocumentSnapshot>(
         stream: _dbService.getPendingRequests(),
         builder: (context, snapshot) {
@@ -153,7 +155,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           Icon(Icons.person_off, size: 64, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-            "No pending friend requests",
+            LocaleData.friendrequestNoPending.getString(context),
             style: TextStyle(fontSize: 18, color: Colors.grey),
           ),
         ],
