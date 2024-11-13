@@ -19,38 +19,55 @@ class NotificationService {
 
   // Initialize the service for Android
   Future<void> initialize() async {
-    // Android-specific initialization settings
-    var androidInitSettings =
-        const AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initSettings = InitializationSettings(
-      android: androidInitSettings,
-    );
+    try {
+      // Android-specific initialization settings
+      var androidInitSettings =
+          const AndroidInitializationSettings('@mipmap/launcher_icon');
+      var initSettings = InitializationSettings(
+        android: androidInitSettings,
+      );
+      // Initialize local notifications
+      await flutterLocalNotificationsPlugin.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+      );
+      // Create both notification channels
+      await _createNotificationChannel(); // Primary channel
+      await _createSecondaryNotificationChannel(); // Secondary channel
 
-    // Initialize local notifications
-    await flutterLocalNotificationsPlugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-    );
+      // Request notification permission on Android 13+
+      if (Platform.isAndroid) {
+        if (await requestNotificationPermission()) {
+          // Listen for foreground messages from Firebase Messaging
+          FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+            if (message.data['type'] == 'main') {
+              showNotification(
+                message.notification?.title ?? "Main Title",
+                message.notification?.body ?? "Main Body",
+              );
+            } else if (message.data['type'] == 'secondary') {
+              showSecondaryNotification(
+                message.notification?.title ?? "Secondary Title",
+                message.notification?.body ?? "Secondary Body",
+              );
+            } else {
+              showNotification(
+                message.notification?.title ?? "General Title",
+                message.notification?.body ?? "General Body",
+              );
+            }
+          });
+        } else {
+          // Handle the case when permission is denied
+          print("Notification permission denied by user.");
+          // Optionally: Show a UI message or a dialog informing the user that notifications are disabled
+        }
 
-    // Request notification permission on Android 13+
-    if (Platform.isAndroid) {
-      if (await requestNotificationPermission()) {
-        // Listen for foreground messages from Firebase Messaging
-        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-          if (message.notification != null) {
-            // Display the notification when the app is in the foreground
-            showNotification(
-                message.notification!.title ?? "Title",
-                message.notification!.body ?? "Body",
-                "emergencynotifsound" // Replace this with the actual sound file name
-                );
-          }
-        });
-      } else {
-        // Handle the case when permission is denied
-        print("Notification permission denied by user.");
-        // Optionally: Show a UI message or a dialog informing the user that notifications are disabled
+        // Create notification channel for Android if not already created
+        await _createNotificationChannel();
       }
+    } catch (e) {
+      print("Error during NotificationService initialization: $e");
     }
   }
 
@@ -85,19 +102,23 @@ class NotificationService {
   }
 
   // Display a local notification on Android with a custom sound
-  Future<void> showNotification(String title, String body, String sound) async {
+  Future<void> showNotification(String title, String body) async {
     AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'your_channel_id', // Customize channel ID
-      'your_channel_name', // Customize channel name
+        const AndroidNotificationDetails(
+      'emergency_channel', // Customize channel ID
+      'Emergency Notifications', // Customize channel name
       importance: Importance.max,
       priority: Priority.high,
       showWhen: false,
-      sound: RawResourceAndroidNotificationSound(sound), // Set custom sound
+      sound: RawResourceAndroidNotificationSound(
+          'emergencynotifsound'), // Reference to custom sound (no extension needed)
+      playSound: true, // Make sure sound plays
     );
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
     );
+
+    // Trigger the notification and repeat it (e.g., every 5 seconds)
     await flutterLocalNotificationsPlugin.show(
       0, // Notification ID
       title,
@@ -105,6 +126,78 @@ class NotificationService {
       platformChannelSpecifics,
       payload: 'Notification Payload',
     );
+
+    // Repeat the notification every 5 seconds (simulate the sound repeating)
+    Future.delayed(Duration(seconds: 5), () {
+      flutterLocalNotificationsPlugin.show(
+        1, // Notification ID (different ID to allow for multiple notifications)
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: 'Notification Payload',
+      );
+    });
+  }
+
+// Function to display secondary notification with different sound
+  Future<void> showSecondaryNotification(String title, String body) async {
+    AndroidNotificationDetails androidDetails =
+        const AndroidNotificationDetails(
+      'chat_channel', // Secondary channel ID
+      'Chat Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound(
+          'chatsound'), // Different custom sound
+      playSound: true,
+    );
+    NotificationDetails platformDetails =
+        NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      1, // Different Notification ID
+      title,
+      body,
+      platformDetails,
+      payload: 'Secondary Notification Payload',
+    );
+  }
+
+// Define a new notification channel for the second type of notifications
+  Future<void> _createSecondaryNotificationChannel() async {
+    var secondaryNotificationChannel = AndroidNotificationChannel(
+      'chat_channel', // New channel ID
+      'Chat Notifications', // New channel name
+      description: 'Channel for chat notifications with different sound',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound(
+          'chatsound'), // Reference to another custom sound (no extension needed)
+      playSound: true,
+    );
+
+    // Create the secondary channel
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(secondaryNotificationChannel);
+  }
+
+  // Create notification channel for Android
+  Future<void> _createNotificationChannel() async {
+    var androidNotificationChannel = AndroidNotificationChannel(
+      'emergency_channel', // Channel ID
+      'Emergency Notifications', // Channel Name
+      description: 'Channel for emergency notifications',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('emergencynotifsound'),
+      playSound: true,
+    );
+
+    // Create the channel
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidNotificationChannel);
   }
 
   // Required: handle background messages

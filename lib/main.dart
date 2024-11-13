@@ -24,11 +24,31 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  await initializeFirebase();
+  // Initialize Firebase
+  try {
+    await initializeFirebase();
+    print("Firebase initialized successfully.");
+  } catch (e) {
+    print("Error during Firebase initialization: $e");
+    // Optionally: show a dialog or UI message to inform the user of the issue
+  }
   // Initialize Notification Service for Android
-  await NotificationService().initialize();
+  try {
+    await NotificationService().initialize();
+    print("Notification service initialized successfully.");
+  } catch (e) {
+    print("Error during NotificationService initialization: $e");
+    // Optionally: show a dialog or UI message to inform the user of the issue
+  }
 
-  await FMTCObjectBoxBackend().initialise();
+  // Initialize FMTC for Android
+  try {
+    await FMTCObjectBoxBackend().initialise();
+    print("FMTC service initialized successfully.");
+  } catch (e) {
+    print("Error during FMTC initialization: $e");
+    // Optionally: show a dialog or UI message to inform the user of the issue
+  }
 
   final mgmt = FMTCStore('mapCache').manage;
 

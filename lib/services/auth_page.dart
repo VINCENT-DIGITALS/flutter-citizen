@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../pages/home_page.dart';
 import '../pages/login_page.dart';
@@ -22,41 +23,53 @@ class _AuthPageState extends State<AuthPage> {
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   DatabaseService _dbservice = DatabaseService();
   bool _hasNavigated = false;
-
   @override
   void initState() {
     super.initState();
 
-    // Listen to connectivity changes for active connectivity types
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) async {
-      if (!_hasNavigated) {
-        if (result.contains(ConnectivityResult.none)) {
-          // No internet, check if the user is authenticated
-          final currentUser = FirebaseAuth.instance.currentUser;
-          if (currentUser != null) {
+    _checkConnectivity();
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final List<ConnectivityResult> connectivityResult =
+          await Connectivity().checkConnectivity();
+
+      if (connectivityResult.contains(ConnectivityResult.none)) {
+        // No internet, check if the user is authenticated
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+
+          // Retrieve user status and privacy policy acceptance from SharedPreferences
+          String? userStatus = prefs.getString('status');
+          bool? isPrivacyPolicyAccepted =
+              prefs.getBool('privacyPolicyAccepted');
+
+          if (userStatus == 'Deactivated') {
+            _showDeactivatedAccountPrompt();
+          } else if (isPrivacyPolicyAccepted == true) {
             _navigateToHomePage();
           } else {
-            _navigateToLoginPage();
+            _showPrivacyPolicyDialog(
+                currentUser); // Show privacy policy dialog if not accepted
           }
         } else {
-          // With internet, check auth status
-          _authSubscription = FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-            if (user == null) {
-              _navigateToLoginPage();
-            } else {
-              await _checkUserStatusAndPrivacyPolicy(user);
-            }
-          });
+          // If not authenticated, navigate to the login page
+          _navigateToLoginPage();
+        }
+      } else {
+        // If internet is available, check the authentication status
+        final User? user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          _navigateToLoginPage();
+        } else {
+          await _checkUserStatusAndPrivacyPolicy(user);
         }
       }
-    });
-
-    // Start a timer to automatically navigate to LoginPage if loading takes too long
-    _loadingTimeout = Timer(const Duration(seconds: 5), () {
-      if (mounted && !_hasNavigated) {
-        _navigateToLoginPage();
-      }
-    });
+    } catch (e) {
+      debugPrint('Error checking connectivity: $e');
+    }
   }
 
   @override
@@ -69,36 +82,61 @@ class _AuthPageState extends State<AuthPage> {
 
   Future<void> _checkUserStatusAndPrivacyPolicy(User user) async {
     try {
-      await user.reload();
-      final currentUser = FirebaseAuth.instance.currentUser;
+      // Start a timer to automatically navigate to LoginPage if loading takes too long
+      // _loadingTimeout = Timer(const Duration(seconds: 5), () {
+      //   if (mounted && !_hasNavigated) {
+      //     _navigateToLoginPage();
+      //   }
+      // });
 
-      if (currentUser != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('citizens')
-            .doc(currentUser.uid)
-            .get();
-        final userData = doc.data();
+      SharedPreferences prefs = await SharedPreferences.getInstance();
 
-        if (!currentUser.emailVerified) {
-          await currentUser.sendEmailVerification();
-          if (mounted) {
-            _showEmailVerificationPrompt();
-          }
-        } else if (userData?['status'] == 'Deactivated') {
-          if (mounted) {
-            _showDeactivatedAccountPrompt();
-          }
-        } else if (userData?['privacyPolicyAcceptance'] == true) {
+      // Check for user data in shared preferences
+      bool? isPrivacyPolicyAccepted = prefs.getBool('privacyPolicyAccepted');
+      String? userStatus = prefs.getString('status');
+
+      if (isPrivacyPolicyAccepted != null && userStatus != null) {
+        if (userStatus == 'Deactivated') {
+          _showDeactivatedAccountPrompt();
+        } else if (isPrivacyPolicyAccepted) {
           _navigateToHomePage();
         } else {
-          if (mounted) _showPrivacyPolicyDialog(currentUser);
+          _showPrivacyPolicyDialog(user);
+        }
+      } else {
+        // If no data in shared preferences, check Firestore
+        await user.reload();
+        final currentUser = FirebaseAuth.instance.currentUser;
+
+        if (currentUser != null) {
+          final doc = await FirebaseFirestore.instance
+              .collection('citizens')
+              .doc(currentUser.uid)
+              .get();
+          final userData = doc.data();
+
+          // Save to shared preferences for future sessions
+          if (userData != null) {
+            await prefs.setBool('privacyPolicyAccepted',
+                userData['privacyPolicyAcceptance'] ?? false);
+            await prefs.setString('status', userData['status'] ?? 'Active');
+          }
+
+          if (!currentUser.emailVerified) {
+            await currentUser.sendEmailVerification();
+            _showEmailVerificationPrompt();
+          } else if (userData?['status'] == 'Deactivated') {
+            _showDeactivatedAccountPrompt();
+          } else if (userData?['privacyPolicyAcceptance'] == true) {
+            _navigateToHomePage();
+          } else {
+            _showPrivacyPolicyDialog(currentUser);
+          }
         }
       }
     } catch (e) {
       if (e.toString().contains('too-many-requests')) {
-        if (mounted) {
-          _showRateLimitPrompt();
-        }
+        _showRateLimitPrompt();
       } else {
         debugPrint('Error checking user status or privacy policy: $e');
       }

@@ -265,7 +265,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                 },
                 icon: Icon(Icons.info, color: Colors.white),
                 label: Text(
-                  "About the Creators",
+                  "Meet the Creators",
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),
@@ -306,6 +306,19 @@ class ImageDialogContent extends StatelessWidget {
             height: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [Colors.blueAccent.withOpacity(0.3), Colors.transparent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 3,
+                  blurRadius: 8,
+                  offset: Offset(0, 4), // Shadow position
+                ),
+              ],
               image: DecorationImage(
                 image: AssetImage(imagePath),
                 fit: BoxFit.cover,

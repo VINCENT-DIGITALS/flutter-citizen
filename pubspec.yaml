@@ -149,6 +149,7 @@ flutter:
     - assets/images/LOGOAPP.png
     - assets/images/LOGODESC.png
     - assets/images/ICONLAUNCHER.png
+    - assets/images/BAYANiICONFINAL.png
     - .env
     - assets/maps/munoz.map
     - assets/images/AboutApp/AppLogo.png
@@ -172,4 +173,9 @@ flutter:
     - assets/images/31.png
     - assets/images/32.png
     - assets/images/LOGOAPP0.png
-    - assets/sounds/emergencynotifsound.mp3
+    - assets/sounds/emergencynotifsound.wav
+    - assets/sounds/emergencynotifsound1.mp3
+    - assets/sounds/emergencynotifsoundss.wav
+    - assets/sounds/emergencynotifsoundshort.wav
+    - assets/sounds/chatsound.wav
+    - assets/images/weathericonplaceholder.png

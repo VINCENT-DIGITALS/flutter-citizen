@@ -41,31 +41,33 @@ class DatabaseService {
       print('Failed to save FCM token: $e');
     }
   }
+
 // Add SOS data to the current user's Firestore subcollection 'sos_requests'
-Future<void> addSosToUser(String userId, GeoPoint location) async {
-  try {
-    // Reference to the 'sos_requests' subcollection for the specific user
-    final sosRequestsRef = _db.collection('citizens').doc(userId).collection('sos_requests');
+  Future<void> addSosToUser(String userId, GeoPoint location) async {
+    try {
+      // Reference to the 'sos_requests' subcollection for the specific user
+      final sosRequestsRef =
+          _db.collection('citizens').doc(userId).collection('sos_requests');
 
-    // Generate a client-side timestamp using DateTime.now()
-    final timestamp = DateTime.now();
+      // Generate a client-side timestamp using DateTime.now()
+      final timestamp = DateTime.now();
 
-    // Prepare the SOS data with the client-side timestamp
-    final sosData = {
-      'location': location,
-      'createdAt': timestamp,
-    };
+      // Prepare the SOS data with the client-side timestamp
+      final sosData = {
+        'location': location,
+        'createdAt': timestamp,
+      };
 
-    // Add a new document with the SOS data in the 'sos_requests' subcollection
-    await sosRequestsRef.add(sosData);
+      // Add a new document with the SOS data in the 'sos_requests' subcollection
+      await sosRequestsRef.add(sosData);
 
-    print("SOS data added to user's 'sos_requests' subcollection with client-side timestamp.");
-  } catch (e) {
-    print("Error adding SOS data: $e");
-    throw e;
+      print(
+          "SOS data added to user's 'sos_requests' subcollection with client-side timestamp.");
+    } catch (e) {
+      print("Error adding SOS data: $e");
+      throw e;
+    }
   }
-}
-
 
   // Getter for the current user
   User? get currentUser {
@@ -648,21 +650,54 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
   }
 
   // Method to fetch weather data
-  Future<Map<String, dynamic>?> fetchWeatherData() async {
+  // Future<Map<String, dynamic>?> fetchWeatherData() async {
+  //   try {
+  //     DocumentSnapshot<Map<String, dynamic>> doc =
+  //         await _db.collection('weather').doc('weatherData').get();
+  //     if (doc.exists) {
+  //       return doc.data();
+  //     } else {
+  //       print('Document does not exist');
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     print('Error fetching weather data: $e');
+  //     return null;
+  //   }
+  // }
+
+  // Fetch current weather data from Firestore
+  Future<Map<String, dynamic>?> fetchCurrentWeatherData() async {
     try {
       DocumentSnapshot<Map<String, dynamic>> doc =
-          await _db.collection('weather').doc('weatherData').get();
+          await _db.collection('weather').doc('current').get();
       if (doc.exists) {
-        return doc.data();
+        return doc.data()?['currentWeather'];
       } else {
-        print('Document does not exist');
+        print('Current weather document does not exist');
         return null;
       }
     } catch (e) {
-      print('Error fetching weather data: $e');
+      print('Error fetching current weather data: $e');
       return null;
     }
   }
+
+Future<List<Map<String, dynamic>>> fetchForecastData() async {
+  try {
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await _db
+        .collection('weather')  // Assuming 'weather' is your Firestore collection
+        .where(FieldPath.documentId, isNotEqualTo: 'current')  // Exclude the 'current' document
+        .get();
+
+    // Convert the query snapshot into a list of maps (documents data)
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
+  } catch (e) {
+    print('Error fetching forecast data: $e');
+    return [];
+  }
+}
+
 
   void flutterToastError(String message) {
     Fluttertoast.showToast(
@@ -743,6 +778,7 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
           'address': '',
           'type': 'citizen',
           'status': 'Activated',
+          'privacyPolicyAccepted': false,
         });
       }
 
@@ -789,6 +825,7 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
           'address': '',
           'type': 'citizen',
           'status': 'Activated',
+          'privacyPolicyAccepted': false,
         };
 
         await userDoc.set(userInfoMap);
@@ -849,6 +886,25 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
       // Create Firestore document for the new user
       await _createUserDocumentIfNotExists(
           user, gUser.displayName, '', gUser.email);
+
+      // Store user details in SharedPreferences
+      if (userCredential.user != null) {
+        User user = userCredential.user!;
+        SharedPreferencesService prefs =
+            await SharedPreferencesService.getInstance();
+        prefs.saveUserData({
+          'uid': user.uid,
+          'email': user.email ?? '',
+          'displayName': displayName,
+          'photoURL': user.photoURL ?? '',
+          'phoneNum': user.phoneNumber ?? '',
+          'createdAt': DateTime.now().toIso8601String(),
+          'address': '',
+          'type': 'citizen',
+          'status': 'Activated',
+          'privacyPolicyAccepted': false,
+        });
+      }
 
       return 'Account successfully created and Email Verification Request also been sent to your email.';
     } catch (e) {
@@ -911,6 +967,8 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
         'address': userData['address'] ?? '',
         'type': userData['type'] ?? '',
         'status': userData['status'] ?? '',
+        'privacyPolicyAccepted': userData['privacyPolicyAcceptance'] ??
+            false, // Added privacy policy status
       });
 
       // Save FCM token
@@ -933,7 +991,7 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
 
       if (docSnapshot.docs.isEmpty) {
         // flutterToastError('User document does not exist');
-        return 'Account does not exist';
+        return 'Email was not found, Please try again or Sign Up';
       }
 
       final userData = docSnapshot.docs.first.data();
@@ -961,6 +1019,8 @@ Future<void> addSosToUser(String userId, GeoPoint location) async {
         'address': userData['address'] ?? '',
         'type': userData['type'] ?? '',
         'status': userData['status'] ?? '',
+        'privacyPolicyAccepted': userData['privacyPolicyAcceptance'] ??
+            false, // Added privacy policy status
       });
       // Save FCM token
       await saveFcmToken(documentId);
