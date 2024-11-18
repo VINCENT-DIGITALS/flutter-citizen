@@ -20,7 +20,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           SizedBox(height: 16),
           Text(
             LocaleData.naturalDisasterGuideDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -33,7 +33,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.naturalDisasterprepdesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -46,7 +46,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.naturalDisasterDuringdesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -59,7 +59,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.naturalDisasterAfterdesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -72,7 +72,7 @@ class NaturalDisasterGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.naturalDisasterContactsdesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           // Add more detailed sections if needed
         ],

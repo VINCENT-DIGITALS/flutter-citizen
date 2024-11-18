@@ -31,7 +31,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
       if (isBottom) {
         setState(() {
           _bottomReachCount += 1;
-          if (_bottomReachCount >= 3) {
+          if (_bottomReachCount >= 10) {
             _showFab = true;
           }
         });
@@ -111,40 +111,39 @@ class _AboutAppPageState extends State<AboutAppPage> {
                     Text(
                       LocaleData.aboutAppguide.getString(context),
                       style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),                     ),
                     SizedBox(height: 10),
                     Text(
                       LocaleData.aboutAppguideDesc.getString(context),
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 20),
                     Text(
                       LocaleData.aboutAppKeyfeatures.getString(context),
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 10),
                     Text(
                       LocaleData.aboutAppKeyfeaturesDesc.getString(context),
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 20),
                     Text(
                       LocaleData.aboutAppMission.getString(context),
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 10),
                     Text(
                       LocaleData.aboutAppMissionDesc.getString(context),
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 20),
                     Text(
                       LocaleData.aboutAppContactUs.getString(context),
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 10),
                     Text(
@@ -152,7 +151,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                       'Email: support\n'
                       'Phone: +63\n'
                       'Address: Muñoz CDRRMO Rescue\nEmergency Operation Center, Science City of Muñoz, 3120 Nueva Ecija',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                   ],
                 ),
@@ -195,14 +194,14 @@ class _AboutAppPageState extends State<AboutAppPage> {
                                         ImageDialogContent(
                                           imagePath: 'assets/images/32.png',
                                           name: "Noaim U. Piti-ilan",
-                                          role: "Project Leader",
+                                          role: "Team Leader",
                                           textScaleFactor:
                                               screenSize.width > 600 ? 1.2 : 0.8,
                                         ),
                                         ImageDialogContent(
                                           imagePath: 'assets/images/31.png',
                                           name: "Kyle Timothy D.P. Masinas",
-                                          role: "Developer",
+                                          role: "Documentation Specialist/QA Tester",
                                           textScaleFactor:
                                               screenSize.width > 600 ? 1.2 : 0.8,
                                         ),

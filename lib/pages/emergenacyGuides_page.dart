@@ -223,7 +223,7 @@ class _EmergencyGuidesPageState extends State<EmergencyGuidesPage> {
           ),
           subtitle: Text(
             subtitle,
-            style: TextStyle(fontSize: screenSize.width * 0.035),
+            style: TextStyle(fontSize: screenSize.width * 0.035), textAlign: TextAlign.justify, // Justify the text here
           ),
         ),
       ),

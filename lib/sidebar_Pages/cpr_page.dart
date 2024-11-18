@@ -84,16 +84,19 @@ class CprPage extends StatelessWidget {
                       LocaleData.cprPage.getString(context),
                       style:
                           TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          //  textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 16),
                     Text(
                       LocaleData.cprPageDesc.getString(context),
                       style: TextStyle(fontSize: 16),
+                       textAlign: TextAlign.justify, // Justify the text here
                     ),
                     SizedBox(height: 16),
                     Text(
                       LocaleData.cprPageDescNum.getString(context),
                       style: TextStyle(fontSize: 16),
+                       textAlign: TextAlign.justify, // Justify the text here
                     ),
                   ],
                 ),

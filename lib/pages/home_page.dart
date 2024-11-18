@@ -133,14 +133,16 @@ class _HomePageState extends State<HomePage> {
       print("Latitude: $_latitude, Longitude: $_longitude");
       bool isLocationServiceEnabled =
           await _locationService.isLocationEnabled();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            LocaleData.locationSuccess.getString(context),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              LocaleData.locationSuccess.getString(context),
+            ),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: Colors.green,
-        ),
-      );
+        );
+      }
       // await _dbService.updateLocationSharing(
       //   location: GeoPoint(_latitude!,
       //       _longitude!), // Create the GeoPoint using _latitude and _longitude

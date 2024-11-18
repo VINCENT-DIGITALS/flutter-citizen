@@ -251,7 +251,7 @@ class PrivacyPolicyPage extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
       child: Text(
         bodyText,
-        style: TextStyle(fontSize: 16),
+        style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
       ),
     );
   }

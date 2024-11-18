@@ -20,7 +20,7 @@ class EmergencyPreparednessGuide extends StatelessWidget {
           SizedBox(height: 16),
           Text(
             LocaleData.emergencyPreparednessGuideDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -33,7 +33,7 @@ class EmergencyPreparednessGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.emergencyPreparednessKitDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -46,7 +46,7 @@ class EmergencyPreparednessGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.emergencyPreparednessFamilyPlanDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -59,7 +59,7 @@ class EmergencyPreparednessGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.emergencyPreparednessprepHomeDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -72,7 +72,7 @@ class EmergencyPreparednessGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.emergencyPreparednessContactsDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
         ],
       ),

@@ -95,7 +95,7 @@ class FireSafetyTipsPage extends StatelessWidget {
                 color: Colors.grey[300],
                 image: DecorationImage(
                   image: AssetImage(imagePath),
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
@@ -119,6 +119,7 @@ class FireSafetyTipsPage extends StatelessWidget {
                   Text(
                     details,
                     style: TextStyle(fontSize: 16),
+                     textAlign: TextAlign.justify, // Justify the text here
                   ),
                 ],
               ),

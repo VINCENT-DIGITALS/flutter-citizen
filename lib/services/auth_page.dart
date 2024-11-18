@@ -18,10 +18,10 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  late final StreamSubscription<User?> _authSubscription;
-  late final Timer _loadingTimeout;
-  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
-  DatabaseService _dbservice = DatabaseService();
+  // late final StreamSubscription<User?> _authSubscription;
+  // late final Timer _loadingTimeout;
+  // StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  final DatabaseService _dbservice = DatabaseService();
   bool _hasNavigated = false;
   @override
   void initState() {
@@ -74,9 +74,9 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   void dispose() {
-    _authSubscription.cancel();
-    _loadingTimeout.cancel();
-    _connectivitySubscription.cancel();
+    // _authSubscription.cancel();
+    // _loadingTimeout.cancel();
+    // _connectivitySubscription.cancel();
     super.dispose();
   }
 

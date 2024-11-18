@@ -81,7 +81,7 @@ class MentalHealthPage extends StatelessWidget {
                     SizedBox(height: 16),
                     Text(
                       LocaleData.mentalHealthAwarenessDesc.getString(context),
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                   ],
                 ),
@@ -151,7 +151,7 @@ class MentalHealthPage extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      LocaleData.selfCareTipsDesc.getString(context),
+                      LocaleData.selfCareTipsDesc.getString(context), textAlign: TextAlign.justify, // Justify the text here
                     ),
                   ],
                 ),

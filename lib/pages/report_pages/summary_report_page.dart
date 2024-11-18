@@ -36,12 +36,11 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
       _reportsStream = _firestore
           .collection('reports')
           .where('reporterId', isEqualTo: user.uid)
-          .orderBy('timestamp', descending: true) // Order by timestamp in descending order
+          .orderBy('timestamp',
+              descending: true) // Order by timestamp in descending order
           .snapshots();
     }
   }
-
-
 
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return 'N/A';
@@ -71,13 +70,17 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
                 }
 
                 final userReports = snapshot.data?.docs
+                        .where((doc) {
+                          final data = doc.data();
+                          return data['archived'] == null ||
+                              data['archived'] == false;
+                        })
                         .map((doc) => doc.data())
                         .toList() ??
                     [];
 
                 if (userReports.isEmpty) {
-                  return const Center(
-                      child: Text('No reports submitted yet.'));
+                  return const Center(child: Text('No reports submitted yet.'));
                 }
 
                 return ListView.separated(
@@ -87,7 +90,8 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
                       const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final report = userReports[index];
-                    report['id'] = snapshot.data?.docs[index].id; // Assign the document ID.
+                    report['id'] = snapshot
+                        .data?.docs[index].id; // Assign the document ID.
                     return _buildReportCard(report);
                   },
                 );
@@ -112,7 +116,8 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailText('Date & Time', _formatTimestamp(report['timestamp'])),
+            _buildDetailText(
+                'Date & Time', _formatTimestamp(report['timestamp'])),
             _buildDetailText('Location', report['address'] ?? 'N/A'),
             _buildDetailText('Landmark', report['landmark'] ?? 'N/A'),
             _buildDetailText('Severity', report['seriousness'] ?? 'N/A'),

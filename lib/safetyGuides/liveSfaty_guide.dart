@@ -20,7 +20,7 @@ class LifeSafetyGuide extends StatelessWidget {
           SizedBox(height: 16),
           Text(
             LocaleData.lifeSafetyDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -33,7 +33,7 @@ class LifeSafetyGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.firstAidBasicsDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -46,7 +46,7 @@ class LifeSafetyGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.trafficAccidentResponseDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -59,7 +59,7 @@ class LifeSafetyGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.homeSafetyTipsDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
           SizedBox(height: 16),
           Text(
@@ -72,7 +72,7 @@ class LifeSafetyGuide extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             LocaleData.lifeSafetyContactsDesc.getString(context),
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18), textAlign: TextAlign.justify, // Justify the text here
           ),
         ],
       ),

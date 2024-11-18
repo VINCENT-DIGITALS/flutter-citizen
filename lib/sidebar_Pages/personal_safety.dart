@@ -83,7 +83,7 @@ class PersonalSafetyPage extends StatelessWidget {
                     SizedBox(height: 16),
                     Text(
                       LocaleData.personalSafetyTipsDesc.getString(context),
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16), textAlign: TextAlign.justify, // Justify the text here
                     ),
                   ],
                 ),

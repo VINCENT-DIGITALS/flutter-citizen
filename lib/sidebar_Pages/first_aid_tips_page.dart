@@ -150,6 +150,7 @@ Widget _buildSection(
                 Text(
                   details,
                   style: TextStyle(fontSize: 16),
+                   textAlign: TextAlign.justify, // Justify the text here
                 ),
               ],
             ),
