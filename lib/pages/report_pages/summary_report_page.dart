@@ -1,6 +1,8 @@
+import 'package:citizen/localization/locales.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:intl/intl.dart';
 
 import '../../components/bottom_bar.dart';
@@ -53,11 +55,12 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text('My Incident Reports'),
+        title: Text(LocaleData.myHistoryReport.getString(context)),
       ),
       drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
       body: _reportsStream == null
-          ? const Center(child: Text('Please log in to view your reports.'))
+          ? Center(
+              child: Text(LocaleData.pleaseLoginReports.getString(context)))
           : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _reportsStream,
               builder: (context, snapshot) {
@@ -80,7 +83,10 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
                     [];
 
                 if (userReports.isEmpty) {
-                  return const Center(child: Text('No reports submitted yet.'));
+                  return Center(
+                      child: Text(
+                    LocaleData.noReportsSubmitted.getString(context),
+                  ));
                 }
 
                 return ListView.separated(
@@ -110,17 +116,21 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         title: Text(
-          'Incident Type: ${report['incidentType'] ?? 'N/A'}',
+          LocaleData.incidenttype.getString(context) +
+              ': ${report['incidentType'] ?? 'N/A'}',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailText(
-                'Date & Time', _formatTimestamp(report['timestamp'])),
-            _buildDetailText('Location', report['address'] ?? 'N/A'),
-            _buildDetailText('Landmark', report['landmark'] ?? 'N/A'),
-            _buildDetailText('Severity', report['seriousness'] ?? 'N/A'),
+            _buildDetailText(LocaleData.dateandTime.getString(context),
+                _formatTimestamp(report['timestamp'])),
+            _buildDetailText(LocaleData.location.getString(context),
+                report['address'] ?? 'N/A'),
+            _buildDetailText(LocaleData.landmark.getString(context),
+                report['landmark'] ?? 'N/A'),
+            _buildDetailText(LocaleData.severity.getString(context),
+                report['seriousness'] ?? 'N/A'),
             _buildStatusText(report['status']),
           ],
         ),
@@ -149,7 +159,7 @@ class _ReportsSummaryPageState extends State<ReportsSummaryPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Text(
-        'Status: ${status ?? 'Pending'}',
+        LocaleData.status.getString(context) + ': ${status ?? 'Pending'}',
         style: TextStyle(
           color: statusColor,
           fontWeight: FontWeight.bold,

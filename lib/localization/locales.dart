@@ -294,7 +294,165 @@ mixin LocaleData {
   static const String reportAddressIcon = 'reportAddressIcon';
   static const String reportDescDesc = 'reportDescDesc';
 
+  //Feature Easter egg
+  static const String meetTheCreators = 'meetTheCreators';
+  static const String meetTheCreatorsdesc = 'meetTheCreatorsdesc';
+  static const String developer = 'developer';
+  static const String projectleader = 'projectleader';
+  static const String documentationTester = 'documentationTester';
+
+//My history reports
+  static const String incidenttype = 'incidenttype';
+  static const String dateandTime = 'dateandTime';
+  static const String location = 'location';
+  static const String landmark = 'landmark';
+  static const String severity = 'severity';
+  static const String status = 'status';
+  static const String myHistoryReport = 'myHistoryReport';
+  static const String noReportsSubmitted = 'noReportsSubmitted ';
+
+  //Incident Information
+  static const String incidentInfo = 'incidentInfo';
+  static const String type = 'type';
+  static const String NoOfInjured = 'NoOfInjured';
+  static const String Description = 'Descriptio';
+  static const String LocationDetails = 'LocationDetails';
+  static const String Address = 'Address';
+  static const String ReportStatus = 'ReportStatus';
+  static const String Acceptedby = 'Acceptedby';
+  static const String Pending = 'Pending';
+  static const String InProgres = 'InProgres';
+  static const String OpenMedia = 'OpenMedia';
+  static const String viewMap = 'viewMap';
+  static const String pleaseLoginReports = 'pleaseLoginReports';
+
+  //profile
+  static const String Language = 'Language';
+  static const String Notifications = 'Notifications';
+  static const String locationSharing = 'locationSharing';
+  static const String LogOut = 'LogOut';
+  static const String AccountProfile = 'AccountProfile';
+  static const String FullName = 'FullName';
+  static const String email = 'email';
+  static const String PhoneNumber = 'PhoneNumber';
+  static const String Save = 'Save';
+  static const String Cancel = 'Cancel';
+  static const String UserTypeg = 'UserTypeg';
+  static const String AccountManagement = 'AccountManagement';
+  static const String changePass = 'changePass';
+
+  //LogBook
+  static const String New = 'New';
+  static const String NewLogbook = 'NewLogbook';
+  static const String IncidentInformation = 'IncidentInformation';
+  static const String CreatedAt = 'CreatedAt';
+  static const String LastUpdatedAt = 'LastUpdatedAt';
+  static const String EditLogbook = 'EditLogbook';
+  static const String ReporterName = 'ReporterName';
+
+  static const String yourcurrentaddress = 'yourcurrentaddress';
+  static const String Legibility = 'Legibility';
+  static const String Incident = 'Incident';
+  static const String Legit = 'Lehitimo';
+  static const String IncidentDescription = 'IncidentDescription';
+  static const String VehiclesInvolved = 'VehiclesInvolved';
+  static const String Vehicles = 'Vehicles';
+  static const String AddVehicle = 'AddVehicle';
+  static const String Victims = 'Victims';
+  static const String Name = 'Name';
+  static const String Age = 'Age';
+  static const String Sex = 'Sex';
+
+  static const String Injury = 'Injury';
+  static const String LifeStatus = 'LifeStatus';
+  static const String Injured = 'Injured';
+  static const String Dead = 'Dead';
+  static const String AddVictim = 'AddVictim';
+  static const String nologsfound = 'nologsfound';
+
+//EmergencyGuides
+  static const String selectguides = 'selectguides';
   static const Map<String, dynamic> EN = {
+    //LogBook
+    New: 'New',
+    NewLogbook: 'New Logbook',
+    IncidentInformation: 'Incident Information',
+    CreatedAt: 'Created At',
+    LastUpdatedAt: 'Last Updated At',
+    EditLogbook: 'Edit Logbook',
+    ReporterName: 'Reporter Name',
+
+    yourcurrentaddress: 'This is your current address',
+    Legibility: 'Legibility',
+    Incident: 'Incident',
+    Legit: 'Legit',
+    IncidentDescription: 'Incident Description',
+    VehiclesInvolved: 'Vehicles Involved',
+    Vehicles: 'Vehicles',
+    AddVehicle: 'Add Vehicle',
+    Victims: 'Victims',
+    Name: 'Name',
+    Age: 'Age',
+    Sex: 'Sex',
+
+    Injury: 'Injury',
+    LifeStatus: 'Life Status',
+    Injured: 'Injured',
+    Dead: 'Dead',
+    AddVictim: 'Add Victim',
+    nologsfound: 'No unsaved logbooks found',
+
+//EmergencyGuides
+    selectguides: 'Select a guide to see its details.',
+
+    //profile
+    Language: 'Language',
+    Notifications: 'Enable Notifications',
+    locationSharing: 'Location Sharing',
+    LogOut: 'Log Out',
+    AccountProfile: 'Account Profile',
+    FullName: 'Full Name',
+    email: 'Email',
+    PhoneNumber: 'Phone Number',
+    Save: 'Save',
+    Cancel: 'Cancel',
+    UserTypeg: 'User Type',
+    AccountManagement: 'Account Management',
+    changePass: 'Change Password',
+
+    //Incident Information
+    incidentInfo: 'Incident Information',
+    type: 'Type',
+    NoOfInjured: 'No. of Injured',
+    Description: 'Description',
+    LocationDetails: 'Location Details',
+    Address: 'Address',
+    ReportStatus: 'Report Status',
+    Acceptedby: ' Accepted by',
+    Pending: 'Pending',
+    InProgres: 'In Progress',
+    OpenMedia: 'Open Media',
+    viewMap: 'View Map',
+    pleaseLoginReports: 'Please log in to view your reports.',
+
+    //My history reports
+    incidenttype: 'Incident Type',
+    dateandTime: 'Date and Time',
+    location: 'location',
+    landmark: 'Landmark',
+    severity: 'Severity',
+    status: 'Status',
+    myHistoryReport: 'My History Reports',
+    noReportsSubmitted: 'noReportsSubmitted ',
+
+    //Feature Easter egg
+    meetTheCreators: 'Meet the Creators',
+    meetTheCreatorsdesc:
+        'This application was created by a dedicated team of BSIT students.\nInitially developed as a capstone project, it also serves as a step toward building the next-generation Emergency Response App.',
+    developer: 'Developer',
+    projectleader: 'Project Leader/Documentation Specialis',
+    documentationTester: 'Documentation Specialist/QA Tester',
+
     //FRIENDSS
     addfriends: 'Add Friends',
     searchnSendfriends: 'Search and send friend requests',
@@ -372,7 +530,8 @@ mixin LocaleData {
     confirmPass: 'Confirm Password',
     passwordNotMatch: 'Password did Not Match, Please try again',
     phonenumber: 'Phone Number',
-    accountCreated: "Account Successfully Created And Email Verification Has been sent to your Email!",
+    accountCreated:
+        "Account Successfully Created And Email Verification Has been sent to your Email!",
 
     general: 'general',
     hotlineDirectories: 'Hotline Directories',
@@ -388,10 +547,10 @@ mixin LocaleData {
     friendsCircle: 'Friends/Circle',
     app: 'App',
     aboutCDRRMO: 'About CDRRMO',
-    privacyPolicy: 'Privacty Policy',
+    privacyPolicy: 'Privacy Policy',
     aboutApp: 'About App',
     home: 'Home',
-    reports: 'History Reports',
+    reports: 'History',
     updates: 'Updates',
     friends: 'Friends',
     settings: 'Settings',
@@ -531,10 +690,10 @@ mixin LocaleData {
         'The City Disaster Risk Reduction and Management Office (CDRRMO) is responsible for disaster preparedness, risk mitigation, response, recovery, initiatives within the city. It operates in coordination with local, national, and international partners to ensure effective disaster management. The key areas of focus include emergency response, capacity building, and public education.',
     aboutCDRRMOMission: 'Mission',
     aboutCDRRMOMissionDesc:
-        'To enhance the safety and resilience of the community by implementing effective disaster risk management strategies.',
+        'The primary mission of the office is to save lives, prevent excessive suffering, secure properties, minimize damage to crops, give immediate assistance to victims during disasters, calamities and pandemics. And mitigate the impact of climate change by increasing the community awareness and to achieve rapid and durable recovery',
     aboutCDRRMOVission: 'Vision',
     aboutCDRRMOVissionDesc:
-        'A disaster-resilient city where citizens are prepared and informed about disaster risks and management protocols.',
+        'To establish a complete 24/7 EMERGENCY OPERATION CENTER (EOC)/COMMAND CENTER that handles any emergencies, deploying emergency response teams (ERT/RESCUE TEAM), and likewise serves as complain and monitoring center in the city and barangays',
 
     //PRIVACY POLICY
     privacyPolicyDate: 'Effective Date: 11/09/2024',
@@ -600,12 +759,92 @@ mixin LocaleData {
   };
 
   static const Map<String, dynamic> TL = {
-       //FRIENDSS
+    //LogBook
+    New: 'Bago',
+    NewLogbook: 'Bagong Logbook',
+    IncidentInformation: 'Impormasyon ng Insidente',
+    CreatedAt: 'Nalikha Noong',
+    LastUpdatedAt: 'Huling Na-update Noong',
+    EditLogbook: 'I-edit ang Logbook',
+    ReporterName: 'Pangalan ng Nag-ulat',
+
+    yourcurrentaddress: 'Ito ang iyong kasalukuyang address',
+    Legibility: 'Kawastuhan',
+    Incident: 'Insidente',
+    Legit: 'Lehitimo',
+    IncidentDescription: 'Deskripsyon ng Insidente',
+    VehiclesInvolved: 'Mga Sasakyang Sangkot',
+    Vehicles: 'Vehicles',
+    AddVehicle: 'Magdagdag ng Sasakyan',
+    Victims: 'Mga Biktima',
+    Name: 'Pangalan',
+    Age: 'Edad',
+    Sex: 'Kasarian',
+
+    Injury: 'Sugat',
+    LifeStatus: 'Kalagayan',
+    Injured: 'Nasugatan',
+    Dead: 'Patay',
+    AddVictim: 'Magdagdag ng Biktima',
+
+//EmergencyGuides
+    selectguides: 'Pumili ng gabay upang makita ang mga detalye nito.',
+
+    //profile
+    Language: 'Lengguwahe',
+    Notifications: 'Enable Notifications',
+    locationSharing: 'Pagbabahagi ng Lokasyon',
+    LogOut: 'Log Out',
+    AccountProfile: 'Account Profile',
+    FullName: 'Buong Pangalan',
+    email: 'Email',
+    PhoneNumber: 'Phone Number',
+    Save: 'I-save',
+    Cancel: 'Kanselahin',
+    UserTypeg: 'Uri ng Gumagamit',
+    AccountManagement: 'Pamamahala ng Account',
+    changePass: 'Baguhin ang Password',
+
+    //Incident Information
+    incidentInfo: 'Impormasyon ng Insidente',
+    type: 'Uri',
+    NoOfInjured: 'Bilang ng Nasugatan',
+    Description: 'Deskripsyon',
+    LocationDetails: 'Mga Detalye ng Lokasyon',
+    Address: 'Address',
+    ReportStatus: 'Status ng Ulat',
+    Acceptedby: 'Tinanggap ni',
+    Pending: 'Pending',
+    InProgres: 'In Progress',
+    OpenMedia: 'Buksan ang Media',
+    viewMap: 'Tingnan ang Mapa',
+    pleaseLoginReports:
+        'Mangyaring mag-log in upang makita ang iyong mga ulat.',
+
+    //My history reports
+    incidenttype: 'Uri ng Insidente',
+    dateandTime: 'Petsa at Oras',
+    location: 'Lokasyon',
+    landmark: 'Palatandaan',
+    severity: 'Tindi',
+    status: 'Status',
+    myHistoryReport: 'Aking Mga Nakaraang Ulat',
+    noReportsSubmitted: 'noReportsSubmitted ',
+
+    //Feature Easter egg
+    meetTheCreators: 'Kilalanin ang mga Lumikha',
+    meetTheCreatorsdesc:
+        'Ang application na ito ay nilikha ng isang dedikadong pangkat ng mga estudyante ng BSIT.\nUnang binuo bilang isang capstone project, ito rin ay nagsisilbing hakbang patungo sa pagbuo ng susunod na henerasyon ng Emergency Response App.',
+    developer: 'Developer',
+    projectleader: 'Pinuno ng Proyekto/Dokumentasyon Espesyalista',
+    documentationTester: 'Dokumentasyon Espesyalista/QA Tester',
+    //FRIENDSS
     addfriends: 'Magdagdag ng Kaibigan',
     searchnSendfriends: 'Maghanap at magpadala ng request sa kaibigan',
     searchFriends: 'Maghanap ng kaibigan',
     sendFriends: 'Magpadala ng friend request',
-    sendFriendsPrompt: 'Sigurado ka bang gusto mong magpadala ng kahilingan sa kaibigan?',
+    sendFriendsPrompt:
+        'Sigurado ka bang gusto mong magpadala ng kahilingan sa kaibigan?',
     friendrequestSuccess: 'Matagumpay na naipadala ang friend request!  ',
     friendrequest: 'Mga Friend Request',
     friendrequestManage: 'Tingnan at pamahalaan ang mga friend request',
@@ -683,7 +922,8 @@ mixin LocaleData {
     confirmPass: 'Kumpirmahin ang Password',
     passwordNotMatch: 'Hindi tumutugma ang password. Pakisubukang muli.',
     phonenumber: 'Numero ng Telepono',
-    accountCreated: 'Tagumpay na nagawa ang iyong account at ang Pagpapatunay ng Email ay Ipinadala na sa Iyong Email!!',
+    accountCreated:
+        'Tagumpay na nagawa ang iyong account at ang Pagpapatunay ng Email ay Ipinadala na sa Iyong Email!!',
 
     general: 'Pangkalahatan',
     hotlineDirectories: 'Mga Directory ng Hotline',
@@ -702,7 +942,7 @@ mixin LocaleData {
     privacyPolicy: 'Pribadong Patnubay',
     aboutApp: 'Tungkol sa App',
     home: 'Home',
-    reports: 'Mga Na-Ulat',
+    reports: 'History',
     updates: 'Updates',
     friends: 'Kaibigan',
     settings: 'Settings',
@@ -842,10 +1082,10 @@ mixin LocaleData {
         'Ang City Disaster Risk Reduction and Management Office (CDRRMO) ay responsable para sa kahandaan sa sakuna, pag-iwas sa panganib, pagtugon, at pagbawi sa mga sakuna sa lungsod. Ito ay nakikipagtulungan sa mga lokal, nasyonal, at internasyonal na katuwang upang matiyak ang mabisang pamamahala sa mga sakuna. Ang mga pangunahing pokus nito ay ang pagtugon sa emergency, pagpapaunlad ng kakayahan, at edukasyon ng publiko.',
     aboutCDRRMOMission: 'Misyon',
     aboutCDRRMOMissionDesc:
-        'Mapalakas ang kaligtasan at katatagan ng komunidad sa pamamagitan ng mabisang estratehiya sa pamamahala sa panganib ng sakuna.',
+        'Ang pangunahing misyon ng tanggapan ay ang magligtas ng mga buhay, maiwasan ang labis na pagdurusa, masiguro ang mga ari-arian, mabawasan ang pinsala sa mga pananim, magbigay ng agarang tulong sa mga biktima sa panahon ng mga sakuna, kalamidad, at pandemya. Gayundin, bawasan ang epekto ng pagbabago ng klima sa pamamagitan ng pagpapataas ng kamalayan ng komunidad at makamit ang mabilis at matibay na pagbangon.',
     aboutCDRRMOVission: 'Pangitain',
     aboutCDRRMOVissionDesc:
-        'Isang lungsod na handa sa sakuna kung saan ang mga mamamayan ay may sapat na kaalaman sa mga panganib at protokol sa pamamahala ng sakuna.',
+        'Magtatag ng isang kumpletong 24/7 EMERGENCY OPERATION CENTER (EOC)/COMMAND CENTER na humahawak ng anumang emerhensiya, nagpapadala ng mga emergency response team (ERT/RESCUE TEAM), at nagsisilbi rin bilang sentro ng hinaing at pagmamanman sa lungsod at mga barangay.',
 
     //PRIVACY POLICY
     privacyPolicyDate: 'Petsa ng Pagiging Epektibo: 11/09/2024',

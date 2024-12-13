@@ -5,8 +5,11 @@ import 'package:citizen/services/database_service.dart';
 import 'package:citizen/services/shared_pref.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../localization/locales.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -116,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account Profile'),
+        title: Text(LocaleData.aboutCDRRMOGuideDesc.getString(context)),
         backgroundColor: const Color.fromARGB(255, 219, 180, 39),
       ),
       body: LayoutBuilder(
@@ -177,7 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 16),
                             _buildProfileInfoRow(
-                              title: 'Full name',
+                              title: LocaleData.fullName.getString(context),
                               controller: usernameController,
                               content: _userData['displayName'] ??
                                   'No name available',
@@ -185,15 +188,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 8),
                             _buildProfileInfoRow(
-                              title: 'Email',
-                              controller: emailController,
-                              content:
-                                  _userData['email'] ?? 'No email available',
-                              hidden: false,
-                            ),
+                                title: LocaleData.email.getString(context),
+                                controller: emailController,
+                                content:
+                                    _userData['email'] ?? 'No email available',
+                                hidden: false,
+                                isEmail: true),
                             const SizedBox(height: 8),
                             _buildProfileInfoRow(
-                              title: 'Phone Number',
+                              title: LocaleData.phonenumber.getString(context),
                               controller: phoneController,
                               content: _isPhoneNumberRevealed
                                   ? _userData['phoneNum'] ??
@@ -209,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 8),
                             _buildProfileInfoRow(
-                              title: 'Address',
+                              title: LocaleData.Address.getString(context),
                               controller: addressController,
                               content: _isAddressRevealed
                                   ? _userData['address'] ??
@@ -238,7 +241,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 32, vertical: 12),
                                       ),
-                                      child: const Text('Save'),
+                                      child: Text(
+                                          LocaleData.Save.getString(context)),
                                     ),
                                     ElevatedButton(
                                       onPressed: _cancelEditing,
@@ -248,7 +252,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 32, vertical: 12),
                                       ),
-                                      child: const Text('Cancel'),
+                                      child: Text(
+                                          LocaleData.cancel.getString(context)),
                                     ),
                                   ],
                                 ),
@@ -261,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: 'User Type: ',
+                          text: LocaleData.UserTypeg.getString(context),
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.black,
@@ -283,8 +288,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Account Management',
+                    Text(
+                      LocaleData.AccountManagement.getString(context),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -308,7 +313,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 32, vertical: 12),
                         ),
-                        child: const Text('Change Password'),
+                        child: Text(LocaleData.changePass.getString(context)),
                       ),
                     ],
                     if (!_isAuthenticated) ...[
@@ -345,6 +350,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required String content,
     required bool hidden,
     VoidCallback? onRevealPressed,
+    bool isEmail = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +362,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         const SizedBox(height: 4),
-        _isEditing
+        _isEditing && !isEmail
             ? TextField(
                 controller: controller,
                 decoration: const InputDecoration(

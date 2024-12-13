@@ -86,7 +86,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     return [
       BottomNavigationBarItem(
         icon: Icon(Icons.home),
-        label: LocaleData.general.getString(context),
+        label: LocaleData.home.getString(context),
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.report),

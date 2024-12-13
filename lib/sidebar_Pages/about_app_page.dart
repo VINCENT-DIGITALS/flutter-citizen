@@ -187,21 +187,21 @@ class _AboutAppPageState extends State<AboutAppPage> {
                                         ImageDialogContent(
                                           imagePath: 'assets/images/30.png',
                                           name: "John Vincent T. Macayanan",
-                                          role: "Developer",
+                                          role: LocaleData.developer.getString(context),
                                           textScaleFactor:
                                               screenSize.width > 600 ? 1.2 : 0.8,
                                         ),
                                         ImageDialogContent(
                                           imagePath: 'assets/images/32.png',
                                           name: "Noaim U. Piti-ilan",
-                                          role: "Team Leader",
+                                          role: LocaleData.projectleader.getString(context),
                                           textScaleFactor:
                                               screenSize.width > 600 ? 1.2 : 0.8,
                                         ),
                                         ImageDialogContent(
                                           imagePath: 'assets/images/31.png',
                                           name: "Kyle Timothy D.P. Masinas",
-                                          role: "Documentation Specialist/QA Tester",
+                                          role: LocaleData.documentationTester.getString(context),
                                           textScaleFactor:
                                               screenSize.width > 600 ? 1.2 : 0.8,
                                         ),
@@ -225,8 +225,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: Text(
-                                      "This application was created by a dedicated team of BSIT students. "
-                                      "Initially developed as a capstone project, it also serves as a step toward building the next-generation Emergency Response App.",
+                                     LocaleData.meetTheCreatorsdesc.getString(context),
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 16,
@@ -264,7 +263,7 @@ class _AboutAppPageState extends State<AboutAppPage> {
                 },
                 icon: Icon(Icons.info, color: Colors.white),
                 label: Text(
-                  "Meet the Creators",
+                  LocaleData.meetTheCreators.getString(context),
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),

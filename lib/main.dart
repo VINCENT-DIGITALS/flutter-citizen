@@ -1,5 +1,6 @@
 import 'package:citizen/services/auth_page.dart';
 import 'package:citizen/services/notificatoin_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,7 @@ import 'localization/locales.dart';
 
 import 'package:flutter/services.dart';
 import 'models/splash_screen.dart';
+import 'services/reportListener.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -32,6 +34,16 @@ void main() async {
     print("Error during Firebase initialization: $e");
     // Optionally: show a dialog or UI message to inform the user of the issue
   }
+  FirebaseAuth.instance.authStateChanges().listen((user) {
+    if (user != null) {
+      print('User is logged in. Initializing Firestore listener.');
+      FirestoreListenerService().initialize();
+    } else {
+      print(
+          'User is not logged in. Skipping Firestore listener initialization.');
+    }
+  });
+
   // Initialize Notification Service for Android
   try {
     await NotificationService().initialize();
@@ -106,6 +118,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey, // Set the global navigator key
       debugShowCheckedModeBanner: false,
       supportedLocales: localization.supportedLocales,
       localizationsDelegates: localization.localizationsDelegates,

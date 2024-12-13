@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../components/bottom_bar.dart';
 import '../../components/custom_drawer.dart';
+import '../../localization/locales.dart';
 import '../map/report_map.dart';
 
 class ReportDetailPage extends StatefulWidget {
@@ -48,7 +50,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text('My Incident Reports'),
+        title: Text(LocaleData.landmark.getString(context)),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream:
@@ -74,31 +76,31 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionHeader('Incident Information'),
+                _buildSectionHeader(LocaleData.incidentInfo.getString(context)),
                 _buildDetailCard([
                   _buildDetailRow(
-                      Icons.report, 'Type', reportData['incidentType']),
-                  _buildDetailRow(Icons.access_time, 'Date & Time',
+                      Icons.report, LocaleData.type.getString(context), reportData['incidentType']),
+                  _buildDetailRow(Icons.access_time, LocaleData.dateandTime.getString(context),
                       _formatTimestamp(reportData['timestamp'])),
-                  _buildDetailRow(Icons.person, 'No. of Injured',
+                  _buildDetailRow(Icons.person,LocaleData.NoOfInjured.getString(context),
                       reportData['injuredCount']?.toString() ?? 'N/A'),
                   _buildDetailRow(
-                      Icons.warning, 'Severity', reportData['seriousness']),
-                  _buildDetailRow(Icons.description_outlined, 'Description',
+                      Icons.warning, LocaleData.severity.getString(context), reportData['seriousness']),
+                  _buildDetailRow(Icons.description_outlined, LocaleData.Description.getString(context),
                       reportData['description']),
                 ]),
                 const SizedBox(height: 16),
-                _buildSectionHeader('Location Details'),
+                _buildSectionHeader(LocaleData.LocationDetails.getString(context)),
                 _buildDetailCard([
                   _buildDetailRow(
-                      Icons.place, 'Address', reportData['address']),
+                      Icons.place, LocaleData.Address.getString(context), reportData['address']),
                   _buildDetailRow(
-                      Icons.location_on, 'Landmark', reportData['landmark']),
+                      Icons.location_on, LocaleData.landmark.getString(context), reportData['landmark']),
                 ]),
                 const SizedBox(height: 16),
-                _buildSectionHeader('Report Status'),
+                _buildSectionHeader(LocaleData.ReportStatus.getString(context)),
                 _buildDetailCard([
-                  _buildDetailRow(Icons.person_search, 'Accepted By',
+                  _buildDetailRow(Icons.person_search,LocaleData.Acceptedby.getString(context),
                       reportData['acceptedBy'] ?? 'Pending'),
                   _buildDetailRow(Icons.update, 'Status',
                       reportData['status'] ?? 'Pending'),
@@ -110,7 +112,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                       onPressed: () async {
                         final shouldOpen = await _showConfirmationDialog(
                             context,
-                            "Open Media",
+                            LocaleData.OpenMedia.getString(context),
                             "Are you sure you want to open the media?");
                         if (shouldOpen) {
                           setState(() {
@@ -118,6 +120,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                           });
                           if (mediaUrl != null && _isVideo(mediaUrl)) {
                             _videoController =
+                                // ignore: deprecated_member_use
                                 VideoPlayerController.network(mediaUrl)
                                   ..initialize().then((_) => setState(() {}));
                           } else if (mediaUrl != null) {
@@ -132,8 +135,8 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                         }
                       },
                       icon: const Icon(Icons.play_circle, color: Colors.white),
-                      label: const Text(
-                        'Open Media',
+                      label: Text(
+                        LocaleData.OpenMedia.getString(context),
                         style: TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -174,7 +177,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                       }
                     },
                     icon: const Icon(Icons.map, color: Colors.white),
-                    label: const Text('View Map',
+                    label:  Text(LocaleData.viewMap.getString(context),
                         style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
@@ -285,8 +288,8 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             }
           },
           icon: const Icon(Icons.open_in_new, color: Colors.white),
-          label: const Text(
-            'Open Media',
+          label:  Text(
+            LocaleData.OpenMedia.getString(context),
             style: TextStyle(color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(

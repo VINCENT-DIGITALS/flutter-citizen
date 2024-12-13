@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:intl/intl.dart';
 
 import '../components/bottom_bar.dart';
 import '../components/custom_drawer.dart';
+import '../localization/locales.dart';
 import '../services/database_service.dart';
 import 'announcement_detail_page.dart';
 
@@ -47,7 +49,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Announcements'),
+        title: Text(LocaleData.announcements.getString(context)),
       ),
       drawer: CustomDrawer(scaffoldKey: _scaffoldKey),
       body: _isLoading
@@ -92,7 +94,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
-                                  announcement['content'] ?? 'No Summary',
+                                  (announcement['content']?.length ?? 0) > 100
+                                      ? '${announcement['content']?.substring(0, 100)}...'
+                                      : announcement['content'] ?? 'No Summary',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[700],

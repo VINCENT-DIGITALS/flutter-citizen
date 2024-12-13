@@ -66,7 +66,7 @@ class _RegisterPageState extends State<RegisterPage>
         confirmpasswordController.clear();
 
         Fluttertoast.showToast(
-            msg:LocaleData.accountCreated.getString(context),
+            msg: LocaleData.accountCreated.getString(context),
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.CENTER,
             timeInSecForIosWeb: 5,
@@ -367,9 +367,9 @@ class _RegisterPageState extends State<RegisterPage>
                                                 controller: usernameController,
                                                 autofocus: false,
                                                 obscureText: false,
-                                                decoration:
-                                                     InputDecoration(
-                                                  labelText: LocaleData.fullName.getString(context),
+                                                decoration: InputDecoration(
+                                                  labelText: LocaleData.fullName
+                                                      .getString(context),
                                                   labelStyle: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color.fromARGB(
@@ -444,9 +444,12 @@ class _RegisterPageState extends State<RegisterPage>
                                                 controller: phoneController,
                                                 autofocus: false,
                                                 obscureText: false,
-                                                decoration:
-                                                     InputDecoration(
-                                                  labelText: LocaleData.phonenumber.getString(context),
+                                                keyboardType:
+                                                    TextInputType.phone,
+                                                decoration: InputDecoration(
+                                                  labelText: LocaleData
+                                                      .phonenumber
+                                                      .getString(context),
                                                   labelStyle: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color.fromARGB(
@@ -457,6 +460,8 @@ class _RegisterPageState extends State<RegisterPage>
                                                         FontWeight.normal,
                                                   ),
                                                   alignLabelWithHint: false,
+                                                  hintText:
+                                                      "Enter a valid phone number",
                                                   hintStyle: TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color.fromARGB(
@@ -474,8 +479,8 @@ class _RegisterPageState extends State<RegisterPage>
                                                     ),
                                                     borderRadius:
                                                         BorderRadius.all(
-                                                            Radius.circular(
-                                                                12)),
+                                                      Radius.circular(12),
+                                                    ),
                                                   ),
                                                   focusedErrorBorder:
                                                       OutlineInputBorder(
@@ -485,8 +490,8 @@ class _RegisterPageState extends State<RegisterPage>
                                                     ),
                                                     borderRadius:
                                                         BorderRadius.all(
-                                                            Radius.circular(
-                                                                12)),
+                                                      Radius.circular(12),
+                                                    ),
                                                   ),
                                                   enabledBorder:
                                                       OutlineInputBorder(
@@ -496,8 +501,8 @@ class _RegisterPageState extends State<RegisterPage>
                                                     ),
                                                     borderRadius:
                                                         BorderRadius.all(
-                                                            Radius.circular(
-                                                                12)),
+                                                      Radius.circular(12),
+                                                    ),
                                                   ),
                                                   errorBorder:
                                                       OutlineInputBorder(
@@ -507,10 +512,40 @@ class _RegisterPageState extends State<RegisterPage>
                                                     ),
                                                     borderRadius:
                                                         BorderRadius.all(
-                                                            Radius.circular(
-                                                                12)),
+                                                      Radius.circular(12),
+                                                    ),
                                                   ),
                                                 ),
+                                                validator: (value) {
+                                                  // Regular expression for validating Philippine phone numbers
+                                                  String pattern =
+                                                      r'^(?:\+639|09|9)(\d{9})$'; // Accepts +639, 09, or 9 as the starting pattern
+                                                  RegExp regex =
+                                                      RegExp(pattern);
+
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return 'Phone number is required.';
+                                                  } else if (!regex
+                                                      .hasMatch(value)) {
+                                                    return 'Enter a valid Philippine phone number.';
+                                                  }
+
+                                                  // Normalize the phone number to the format 09497918144
+                                                  if (value
+                                                      .startsWith('+639')) {
+                                                    value = value.replaceFirst(
+                                                        '+639', '09');
+                                                  } else if (value
+                                                      .startsWith('9')) {
+                                                    value = '09' + value;
+                                                  }
+
+                                                  // Update the controller value to save the normalized number
+                                                  phoneController.text = value;
+
+                                                  return null;
+                                                },
                                               ),
                                             ),
                                             Padding(
@@ -618,7 +653,9 @@ class _RegisterPageState extends State<RegisterPage>
                                                 obscureText:
                                                     !_confirmPasswordVisible,
                                                 decoration: InputDecoration(
-                                                  labelText: LocaleData.confirmPass.getString(context),
+                                                  labelText: LocaleData
+                                                      .confirmPass
+                                                      .getString(context),
                                                   labelStyle: const TextStyle(
                                                     fontFamily: 'Inter',
                                                     color: Color.fromARGB(
@@ -788,8 +825,8 @@ class _RegisterPageState extends State<RegisterPage>
                                                         // Show toast message if sign-in failed
                                                         Fluttertoast.showToast(
                                                           msg: result,
-                                                          toastLength: Toast
-                                                              .LENGTH_LONG,
+                                                          toastLength:
+                                                              Toast.LENGTH_LONG,
                                                           gravity: ToastGravity
                                                               .BOTTOM,
                                                           backgroundColor:

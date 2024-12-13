@@ -148,7 +148,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             //       );
             //     }),
             _buildDrawerItem(
-                icon: Icons.location_on,
+                icon: Icons.call,
                 text: LocaleData.hotlineDirectories
                               .getString(context),
                 iconColor: iconColor,

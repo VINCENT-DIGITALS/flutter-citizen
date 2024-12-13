@@ -29,16 +29,17 @@ class _EvacuationMapPageState extends State<EvacuationMapPage> {
     },
     {
       'iconColor': Colors.orange,
-      'title': 'Bical',
-      'subtitle': 'Bical Barangay Hall',
-      'coords': const LatLng(15.743414052724845, 120.90244796536255),
-    },
-    {
-      'iconColor': Colors.orange,
       'title': 'Bantug',
       'subtitle': 'Bantug Barangay Hall',
       'coords': const LatLng(15.720975797417958, 120.92010871535568),
     },
+    {
+      'iconColor': Colors.orange,
+      'title': 'Bical',
+      'subtitle': 'Bical Barangay Hall',
+      'coords': const LatLng(15.743414052724845, 120.90244796536255),
+    },
+
     {
       'iconColor': Colors.orange,
       'title': 'Cabisuculan',
@@ -155,6 +156,12 @@ class _EvacuationMapPageState extends State<EvacuationMapPage> {
     },
     {
       'iconColor': Colors.orange,
+      'title': 'Poblacion North',
+      'subtitle': 'Poblacion North Barangay Hall',
+      'coords': const LatLng(15.720462500000012, 120.90393612023877),
+    },
+    {
+      'iconColor': Colors.orange,
       'title': 'Poblacion South',
       'subtitle': 'Poblacion South Baranggay Hall',
       'coords': const LatLng(15.718412045202038, 120.90564433792288),
@@ -207,7 +214,13 @@ class _EvacuationMapPageState extends State<EvacuationMapPage> {
       'subtitle': 'Villa Nati Barangay Hall',
       'coords': const LatLng(15.691999026175324, 120.93903425144819),
     },
-    // Add more locations here...
+    // Add more locations here... Like this
+    // {
+    //   'iconColor': Colors.orange,
+    //   'title': 'NAme of place',
+    //   'subtitle': 'Name of specific evacuation place',
+    //   'coords': latlong from google map  like this const LatLng(15.691999026175324, 120.93903425144819),
+    // },
   ];
 
   @override

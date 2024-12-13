@@ -4,6 +4,7 @@ import 'package:citizen/components/loading.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:citizen/services/location_service.dart';
@@ -16,6 +17,7 @@ import 'package:gal/gal.dart';
 import '../localization/locales.dart';
 import '../services/database_service.dart';
 import '../pages/report_pages/summary_report_page.dart';
+
 class ReportPage extends StatefulWidget {
   final String currentPage;
   const ReportPage({Key? key, this.currentPage = 'report'}) : super(key: key);
@@ -99,16 +101,19 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
         _longitude = position.longitude; // Store longitude
       });
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          content: Text( LocaleData.locationSuccess.getString(context),),
+        SnackBar(
+          content: Text(
+            LocaleData.locationSuccess.getString(context),
+          ),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          content:
-              Text( LocaleData.locationError.getString(context),),
+        SnackBar(
+          content: Text(
+            LocaleData.locationError.getString(context),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -196,7 +201,9 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
       // Redirect to another page
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ReportsSummaryPage()), // Replace SuccessPage() with your target page widget
+        MaterialPageRoute(
+            builder: (context) =>
+                ReportsSummaryPage()), // Replace SuccessPage() with your target page widget
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -451,7 +458,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
               ),
             ),
 
-            // Incident Type, Number of Persons Injured, and Seriousness in a Row (Responsive)
+            // _incidentTypeControllerF
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
               child: LayoutBuilder(
@@ -495,20 +502,18 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                    
                     ],
                   );
                 },
               ),
             ),
-            // Incident Type, Number of Persons Injured, and Seriousness in a Row (Responsive)
+            // _injuredCountController
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   return Row(
                     children: [
-                      
                       Flexible(
                         flex: 2,
                         child: Padding(
@@ -516,6 +521,22 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                           child: TextField(
                             controller: _injuredCountController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[0-9]'), // Allow only digits 0-9
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                if (value == "0") {
+                                  _selectedSeriousness =
+                                      "N/A"; // Set seriousness to "N/A"
+                                } else if (value.isEmpty) {
+                                  _selectedSeriousness =
+                                      null; // Reset seriousness when count is empty
+                                }
+                              });
+                            },
                             decoration: InputDecoration(
                               labelText:
                                   LocaleData.reportInjured.getString(context),
@@ -526,8 +547,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                               ),
                               filled: true,
                               fillColor: Colors.white,
-                              floatingLabelBehavior: FloatingLabelBehavior
-                                  .always, // Move label to top
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
                             ),
                           ),
                         ),
@@ -547,18 +568,28 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                               fillColor: Colors.white,
                             ),
                             value: _selectedSeriousness,
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _selectedSeriousness = newValue;
-                              });
-                            },
-                            items: seriousnessLevels
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
+                            onChanged: _injuredCountController.text == "0"
+                                ? null // Disable when the count is 0
+                                : (String? newValue) {
+                                    setState(() {
+                                      _selectedSeriousness = newValue;
+                                    });
+                                  },
+                            items: _injuredCountController.text == "0"
+                                ? [
+                                    DropdownMenuItem<String>(
+                                      value: "N/A",
+                                      child: Text("N/A"),
+                                    ),
+                                  ] // Only N/A option when count is 0
+                                : seriousnessLevels
+                                    .map<DropdownMenuItem<String>>(
+                                        (String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
                             isExpanded: true,
                           ),
                         ),
@@ -568,7 +599,7 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                 },
               ),
             ),
-           
+            //Description
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
               child: Container(
@@ -578,6 +609,8 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                   maxLines: null,
                   expands: true,
                   textAlignVertical: TextAlignVertical.top,
+                  textInputAction: TextInputAction
+                      .done, // Show "Done" button on the keyboard
                   decoration: InputDecoration(
                     labelText: LocaleData.reportDesc.getString(context),
                     hintText: LocaleData.reportDescDesc.getString(context),
@@ -589,6 +622,11 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
                     floatingLabelBehavior:
                         FloatingLabelBehavior.always, // Move label to top
                   ),
+                  onSubmitted: (value) {
+                    // Finalize the input when "Done" is pressed
+                    print("Finalized value: $value");
+                    FocusScope.of(context).unfocus(); // Dismiss the keyboard
+                  },
                 ),
               ),
             ),
@@ -598,18 +636,31 @@ class _ReportPageState extends State<ReportPage> with WidgetsBindingObserver {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.check,
-                      color: Colors.black), // Change icon color to black
+                  icon: const Icon(Icons.send, color: Colors.black),
                   label: Text(
                     LocaleData.reportSubmit.getString(context),
-                    style: TextStyle(
-                        color: Colors.black), // Change text color to black
+                    style: const TextStyle(color: Colors.black),
                   ),
-                  onPressed: _submitReport,
+                  onPressed: (_addressController.text.isNotEmpty &&
+                          _descriptionController.text.isNotEmpty &&
+                          _mediaSelected &&
+                          _incidentTypeController.text.isNotEmpty &&
+                          _injuredCountController.text.isNotEmpty &&
+                          _selectedSeriousness != null)
+                      ? () {
+                          // Add your submit logic here
+                          _submitReport();
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor:
-                        Colors.black, // Set the text and icon color to black
-                    backgroundColor: const Color.fromARGB(255, 212, 212, 212),
+                    backgroundColor: (_addressController.text.isNotEmpty &&
+                            _descriptionController.text.isNotEmpty &&
+                            _mediaSelected &&
+                            _incidentTypeController.text.isNotEmpty &&
+                            _injuredCountController.text.isNotEmpty &&
+                            _selectedSeriousness != null)
+                        ? Colors.green
+                        : Colors.grey,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
