@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:citizen/services/firebase_exceptions.dart';
 import 'package:citizen/services/shared_pref.dart';
@@ -11,7 +13,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:http/http.dart' as http;
 import '../api/firebase_api.dart';
 import '../pages/login_page.dart';
 import 'foreground_service.dart';
@@ -220,9 +222,113 @@ class DatabaseService {
         'status': 'pending',
       };
 
-      await _db.collection('reports').add(reportData);
+      // await _db.collection('reports').add(reportData);
+      // Add the report to Firestore
+      final reportRef = await _db.collection('reports').add(reportData);
+
+      // Send notification after adding the report
+      await _sendReportNotification(
+        reportId: reportRef.id,
+        incidentType: incidentType,
+        description: description,
+      );
     } catch (e) {
       throw Exception('Failed to add report: $e');
+    }
+  }
+
+  /// Sends notifications to responders and operators when a new report is submitted.
+
+  Future<void> _sendReportNotification({
+    required String reportId,
+    required String incidentType,
+    required String description,
+  }) async {
+    try {
+      // Log the start of notification sending
+      print('Preparing to send notification for report: $reportId');
+
+      // Fetch FCM tokens from the "responders" and "operator" collections
+      List<String> tokens = [];
+
+      // Fetch FCM tokens from responders collection
+      final respondersSnapshot =
+          await FirebaseFirestore.instance.collection('responders').get();
+      for (var doc in respondersSnapshot.docs) {
+        final data = doc.data();
+        if (data.containsKey('fcmToken') && data['fcmToken'] is String) {
+          tokens.add(data['fcmToken']);
+        }
+      }
+
+      // Fetch FCM tokens from operators collection
+      final operatorsSnapshot =
+          await FirebaseFirestore.instance.collection('operator').get();
+      for (var doc in operatorsSnapshot.docs) {
+        final data = doc.data();
+        if (data.containsKey('fcmToken') && data['fcmToken'] is String) {
+          tokens.add(data['fcmToken']);
+        }
+      }
+
+      // Check if there are tokens to send notifications
+      if (tokens.isEmpty) {
+        print('No valid FCM tokens found.');
+        return;
+      }
+
+      // Create the notification payload
+      final notificationTitle =
+          incidentType.isNotEmpty ? incidentType : "New Report Submitted";
+      final notificationBody = description.length > 30
+          ? '${description.substring(0, 30)}...'
+          : description;
+
+      // Prepare FCM HTTP v1 API request
+      final url = Uri.parse(
+          'https://fcm.googleapis.com/v1/projects/bayani-79675/messages:send');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization':
+            'Bearer YOUR_SERVER_KEY', // Replace with your server key
+      };
+      final body = {
+        "message": {
+          "notification": {
+            "title": notificationTitle,
+            "body": notificationBody,
+          },
+          "data": {
+            "reportId": reportId,
+          },
+          "token": tokens, // Sending to multiple recipients
+          "android": {
+            "priority": "high",
+            "notification": {
+              "sound": "emergencynotifsound", // Custom sound for notifications
+              "channelId": "emergency_channel", // Android-specific channel ID
+            }
+          },
+          "webpush": {
+            "headers": {
+              "Urgency": "high",
+            },
+          },
+        }
+      };
+
+      // Send the POST request
+      final response =
+          await http.post(url, headers: headers, body: json.encode(body));
+
+      if (response.statusCode == 200) {
+        print('Notification sent successfully.');
+      } else {
+        print('Failed to send notification. Response: ${response.body}');
+      }
+    } catch (e) {
+      // Log and handle errors
+      print('Failed to send notifications: $e');
     }
   }
 
@@ -683,21 +789,22 @@ class DatabaseService {
     }
   }
 
-Future<List<Map<String, dynamic>>> fetchForecastData() async {
-  try {
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await _db
-        .collection('weather')  // Assuming 'weather' is your Firestore collection
-        .where(FieldPath.documentId, isNotEqualTo: 'current')  // Exclude the 'current' document
-        .get();
+  Future<List<Map<String, dynamic>>> fetchForecastData() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await _db
+          .collection(
+              'weather') // Assuming 'weather' is your Firestore collection
+          .where(FieldPath.documentId,
+              isNotEqualTo: 'current') // Exclude the 'current' document
+          .get();
 
-    // Convert the query snapshot into a list of maps (documents data)
-    return querySnapshot.docs.map((doc) => doc.data()).toList();
-  } catch (e) {
-    print('Error fetching forecast data: $e');
-    return [];
+      // Convert the query snapshot into a list of maps (documents data)
+      return querySnapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      print('Error fetching forecast data: $e');
+      return [];
+    }
   }
-}
-
 
   void flutterToastError(String message) {
     Fluttertoast.showToast(
@@ -1005,6 +1112,17 @@ Future<List<Map<String, dynamic>>> fetchForecastData() async {
           email: email, password: password);
       User? user = userCredential.user;
 
+      if (user == null) {
+        return 'Sign-in failed. Please try again.';
+      }
+      // Reload user to get latest email verification status
+      await user.reload();
+
+      if (!user.emailVerified) {
+        user.sendEmailVerification();
+        await _auth.signOut(); // Sign out if email is not verified
+        return 'Email is not verified yet. Please check the email we sent to your email.';
+      }
       // Store user details in SharedPreferences
       SharedPreferencesService prefs =
           await SharedPreferencesService.getInstance();
